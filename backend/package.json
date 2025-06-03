@@ -14,10 +14,15 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "6.8.2",
-    "express": "^5.1.0"
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "viem": "^2.30.6"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "jsonwebtoken": "^9.0.2",
     "prisma": "^6.8.2"
   }
 }

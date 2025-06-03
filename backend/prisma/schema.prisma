@@ -33,7 +33,7 @@ model AuthNonces {
   walletAddress String   @unique @map("wallet_address") @db.VarChar(42)
   nonce         String   @db.VarChar(64)
   expiresAt     DateTime @map("expires_at")
-  createdAt     DateTime @map("created_at")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([expiresAt])
   @@map("auth_nonces")
