@@ -1,8 +1,8 @@
 // src/app.ts
 import express from 'express';
 import cors from 'cors';
-import { createMainRouter } from './routes/index.js';
-import { errorHandler, notFoundHandler } from './shared/middleware/errorHandler.js';
+import { createMainRouter } from './routes';
+import { errorHandler, notFoundHandler } from './shared/middleware/errorHandler';
 
 export const createApp = (): express.Application => {
   const app = express();

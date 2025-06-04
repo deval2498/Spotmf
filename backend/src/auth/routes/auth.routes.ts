@@ -1,7 +1,7 @@
 // src/auth/routes/auth.routes.ts
 import { Router } from 'express';
-import { AuthController } from '../controllers/AuthController.js';
-import { validateChallengeRequest, validateVerifyRequest } from '../middleware/validator.js';
+import { AuthController } from '../controllers/AuthController';
+import { validateChallengeRequest, validateVerifyRequest } from '../middleware/validator';
 
 export const createAuthRoutes = (authController: AuthController): Router => {
   const router = Router();

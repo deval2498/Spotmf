@@ -1,8 +1,8 @@
 import { PrismaClient, Prisma } from "@prisma/client";
-import { ChallengeRequest, ChallengeResponse, VerifySignatureRequest, VerifySignatureResponse  } from "../types/auth.types.js";
-import { CryptoService } from "@/shared/service/CryptoService.js";
-import { getUnprefixedHex } from "@/shared/utils/Validations.js";
-import { AuthException } from "@/shared/exceptions/Exceptions.js";
+import { ChallengeRequest, ChallengeResponse, VerifySignatureRequest, VerifySignatureResponse  } from "../types/auth.types";
+import { CryptoService } from "@/shared/service/CryptoService";
+import { getUnprefixedHex } from "@/shared/utils/Validations";
+import { AuthException } from "@/shared/exceptions/Exceptions";
 export class WalletAuthService {
     constructor(private prisma: PrismaClient, private cyrptoService: CryptoService) {
     }

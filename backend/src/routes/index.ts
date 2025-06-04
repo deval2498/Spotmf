@@ -1,10 +1,10 @@
 // src/routes/index.ts
 import { Router } from 'express';
-import { createAuthRoutes } from '../auth/routes/auth.routes.js';
-import { AuthController } from '../auth/controllers/AuthController.js';
-import { WalletAuthService } from '../auth/services/WalletAuthService.js';
-import { CryptoService } from '../shared/service/CryptoService.js';
-import { db } from '../shared/config/Database.js';
+import { createAuthRoutes } from '../auth/routes/auth.routes';
+import { AuthController } from '../auth/controllers/AuthController';
+import { WalletAuthService } from '../auth/services/WalletAuthService';
+import { CryptoService } from '../shared/service/CryptoService';
+import { db } from '../shared/config/Database';
 
 export const createMainRouter = (): Router => {
   const router = Router();

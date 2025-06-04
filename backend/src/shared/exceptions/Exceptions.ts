@@ -10,7 +10,7 @@ export abstract class BaseException extends Error {
   }
   
   // src/shared/exceptions/AuthException.ts
-  export class AuthException extends BaseException {
+export class AuthException extends BaseException {
     readonly statusCode = 401;
   
     constructor(message: string) {
@@ -19,7 +19,7 @@ export abstract class BaseException extends Error {
   }
   
   // src/shared/exceptions/ServerError.ts
-  export class ServerError extends BaseException {
+export class ServerError extends BaseException {
     readonly statusCode = 500;
   
     constructor(message: string = 'Internal server error') {
@@ -28,7 +28,7 @@ export abstract class BaseException extends Error {
   }
   
   // src/shared/exceptions/NotFoundError.ts
-  export class NotFoundError extends BaseException {
+export class NotFoundError extends BaseException {
     readonly statusCode = 404;
   
     constructor(message: string) {

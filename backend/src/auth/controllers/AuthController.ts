@@ -1,4 +1,4 @@
-import { WalletAuthService } from "../services/WalletAuthService.js";
+import { WalletAuthService } from "../services/WalletAuthService";
 import type { Request, Response, NextFunction } from "express";
 export class AuthController {
     constructor(private authService: WalletAuthService) {

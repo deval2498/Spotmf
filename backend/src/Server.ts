@@ -1,6 +1,6 @@
 // src/server.ts
 import { createApp } from './app.js';
-import { db } from './shared/config/Database.js';
+import { db } from './shared/config/Database';
 
 const PORT = process.env.PORT || 3000;
 
