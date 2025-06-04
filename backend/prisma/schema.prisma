@@ -15,18 +15,31 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  walletAddress String   @unique @map("wallet_address") @db.VarChar(42)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @map("updated_at")
+  id               String          @id @default(cuid())
+  walletAddress    String          @unique @map("wallet_address") @db.VarChar(42)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @default(now()) @map("updated_at")
   // profile fields
-  email         String?  @db.VarChar(255)
-  name          String?  @db.VarChar(100)
-  profileImage  String?
-  isActive      Boolean  @default(false)
+  email            String?         @db.VarChar(255)
+  name             String?         @db.VarChar(100)
+  profileImage     String?
+  isActive         Boolean         @default(false)
+  funds            Funds[]
+  activeStrategies User_Strategy[]
 
   @@index([walletAddress])
   @@map("users")
+}
+
+model Funds {
+  id              String  @id @default(cuid())
+  contractAddress String  @map("contract_address")
+  amount          BigInt  @default(0)
+  txReceipt       String  @map("tx_receipt")
+  contractName    String? @map("contract_name")
+  contractSymbol  String? @map("contract_symbol")
+  userId          String
+  User            User    @relation(fields: [userId], references: [id])
 }
 
 model AuthNonces {
@@ -56,4 +69,35 @@ model ActionNonce {
   @@index([nonce])
   @@index([expiresAt])
   @@map("action_nonces")
+}
+
+model Strategy {
+  id             String          @id @default(cuid())
+  type           STRATEGY_TYPE
+  userStrategies User_Strategy[]
+}
+
+model User_Strategy {
+  id             String     @id @default(cuid())
+  strategyId     String
+  strategy       Strategy   @relation(fields: [strategyId], references: [id])
+  asset          ASSET_TYPE
+  intervalAmount BigInt     @map("interval_amount")
+  intervalDays   Decimal    @map("interval_days")
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  lastExecutedAt DateTime?  @map("last_executed_at")
+  User           User       @relation(fields: [userId], references: [id])
+  userId         String
+}
+
+enum STRATEGY_TYPE {
+  SIMPLE
+  DMA_200
+}
+
+enum ASSET_TYPE {
+  BTC
+  ETH
+  HYPE
 }
