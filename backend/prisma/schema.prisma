@@ -38,8 +38,8 @@ model Funds {
   txReceipt       String  @map("tx_receipt")
   contractName    String? @map("contract_name")
   contractSymbol  String? @map("contract_symbol")
-  userId          String
-  User            User    @relation(fields: [userId], references: [id])
+  walletAddress   String
+  User            User    @relation(fields: [walletAddress], references: [walletAddress])
 }
 
 model AuthNonces {
@@ -73,7 +73,7 @@ model ActionNonce {
 
 model Strategy {
   id             String          @id @default(cuid())
-  type           STRATEGY_TYPE
+  type           STRATEGY_TYPE   @unique
   userStrategies User_Strategy[]
 }
 
@@ -87,8 +87,8 @@ model User_Strategy {
   isActive       Boolean    @default(true)
   createdAt      DateTime   @default(now()) @map("created_at")
   lastExecutedAt DateTime?  @map("last_executed_at")
-  User           User       @relation(fields: [userId], references: [id])
-  userId         String
+  User           User       @relation(fields: [walletAddress], references: [walletAddress])
+  walletAddress  String
 }
 
 enum STRATEGY_TYPE {

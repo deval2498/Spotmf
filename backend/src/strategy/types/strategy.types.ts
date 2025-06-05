@@ -1,21 +1,31 @@
-interface GetAllUserStrategyRequest {
+import { PrismaClient,Prisma, STRATEGY_TYPE } from "@prisma/client";
+
+export interface GetAllUserStrategyRequest {
     walletAddress: string;
 }
 
-interface CreateUserStrategyRequest {
+export interface GetUserStrategyRequest {
+    userStrategyId: string;
+}
+
+export interface CreateUserStrategyRequest {
+    walletAddress: string;
     txReceipt: string;
     contractAddress: string;
     amount: string;
-    strategyId: string;
+    approvedAmount: BigInt;
+    strategyType: STRATEGY_TYPE;
     asset: string;
     intervalDays: string;
 }
 
-interface DeleteUserStrategyRequest {
+export interface DeleteUserStrategyRequest {
     userStrategyId: string;
+    walletAddress: string;
 }
 
-interface UpdateUserStrategyRequest {
+export interface UpdateUserStrategyRequest {
+    walletAddress: string;
     userStrategyId: string;      // Required - which strategy to update
     txReceipt?: string;          // Optional - only if blockchain action needed
     contractAddress?: string;    // Optional
