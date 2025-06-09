@@ -15,6 +15,7 @@ export interface CreateUserStrategyRequest {
     amount: string;
     approvedAmount: BigInt;
     strategyType: STRATEGY_TYPE;
+    acceptedSlippage: string;
     asset: string;
     intervalDays: string;
 }

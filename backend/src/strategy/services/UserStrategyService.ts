@@ -44,7 +44,8 @@ class UserStrategyService {
                     walletAddress: createUserStrategyObject.walletAddress,
                     asset: createUserStrategyObject.asset as ASSET_TYPE,
                     intervalAmount: BigInt(createUserStrategyObject.amount),
-                    intervalDays: parseFloat(createUserStrategyObject.intervalDays)
+                    intervalDays: parseFloat(createUserStrategyObject.intervalDays),
+                    acceptedSlippage: parseFloat(createUserStrategyObject.acceptedSlippage)
                 }
             })
         })

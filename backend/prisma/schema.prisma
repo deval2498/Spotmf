@@ -78,17 +78,50 @@ model Strategy {
 }
 
 model User_Strategy {
-  id             String     @id @default(cuid())
-  strategyId     String
-  strategy       Strategy   @relation(fields: [strategyId], references: [id])
-  asset          ASSET_TYPE
-  intervalAmount BigInt     @map("interval_amount")
-  intervalDays   Decimal    @map("interval_days")
-  isActive       Boolean    @default(true)
-  createdAt      DateTime   @default(now()) @map("created_at")
-  lastExecutedAt DateTime?  @map("last_executed_at")
-  User           User       @relation(fields: [walletAddress], references: [walletAddress])
-  walletAddress  String
+  id               String     @id @default(cuid())
+  strategyId       String
+  strategy         Strategy   @relation(fields: [strategyId], references: [id])
+  asset            ASSET_TYPE
+  intervalAmount   BigInt     @map("interval_amount")
+  intervalDays     Decimal    @map("interval_days")
+  acceptedSlippage Decimal    @default(1.0) @map("accepted_slippage") // 1% default
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now()) @map("created_at")
+  lastExecutedAt   DateTime?  @map("last_executed_at")
+  User             User       @relation(fields: [walletAddress], references: [walletAddress])
+  walletAddress    String
+
+  @@map("user_strategies")
+}
+
+model PriceCache {
+  id        String   @id @default(cuid())
+  asset     String // 'UBTC', 'WBTC', 'WHYPE'
+  price     String   @db.VarChar(50) // Store as string to avoid precision issues
+  source    String   @db.VarChar(10) // 'DEX', 'API'
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([asset, timestamp])
+  @@index([asset, source])
+  @@index([timestamp])
+  @@map("price_cache")
+}
+
+model HistoricalPrice {
+  id        String   @id @default(cuid())
+  asset     String   @db.VarChar(10) // 'UBTC', 'WBTC', 'WHYPE'
+  date      DateTime @db.Date // Date only (no time)
+  price     String   @db.VarChar(50) // Daily closing price
+  source    String   @default("DEX") @db.VarChar(10) // 'DEX', 'API'
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([asset, date], name: "asset_date") // One price per asset per day
+  @@index([asset])
+  @@index([asset, source])
+  @@index([date])
+  @@map("historical_prices")
 }
 
 enum STRATEGY_TYPE {

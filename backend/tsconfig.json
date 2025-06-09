@@ -8,7 +8,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "target": "es2016",
+    "target": "es2020",
     "module": "ESNext",  // ← Change this
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
