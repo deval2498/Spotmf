@@ -1,4 +1,4 @@
-import { PoolConfig } from '../types/market-data.types';
+import { PoolConfig } from '../types/market-data.types.ts';
 
 export const HYPEREVM_POOL_CONFIGS: PoolConfig[] = [
   {

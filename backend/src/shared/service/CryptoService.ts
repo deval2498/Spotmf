@@ -1,6 +1,7 @@
-import crypto from "crypto"
+import * as crypto from "crypto"
 import { recoverMessageAddress, Signature } from "viem"
-import jwt, { SignOptions } from "jsonwebtoken"
+import * as jwt from "jsonwebtoken";
+import { SignOptions } from "jsonwebtoken"
 export class CryptoService {
     generateAuthNonce(): string {
         return crypto.randomBytes(32).toString('hex')

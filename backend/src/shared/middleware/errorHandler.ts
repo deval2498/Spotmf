@@ -1,6 +1,6 @@
 // src/shared/middleware/errorHandler.ts
 import { Request, Response, NextFunction } from 'express';
-import { BaseException } from '@/shared/exceptions/Exceptions';
+import { BaseException } from '../../shared/exceptions/Exceptions.ts';
 
 export const errorHandler = (
   error: Error,

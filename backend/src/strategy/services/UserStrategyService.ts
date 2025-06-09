@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient, User_Strategy, ASSET_TYPE } from "@prisma/client";
-import type { GetAllUserStrategyRequest, GetUserStrategyRequest, CreateUserStrategyRequest } from "../types/strategy.types";
+import type { GetAllUserStrategyRequest, GetUserStrategyRequest, CreateUserStrategyRequest } from "../types/strategy.types.ts";
 
 class UserStrategyService {
     constructor(private prisma: PrismaClient){}

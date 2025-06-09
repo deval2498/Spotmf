@@ -1,7 +1,7 @@
-import { HyperswapPriceService } from './HyperswapPriceService';
-import { PriceCollectionJob } from '../jobs/PriceCollectionJob';
-import { db } from '@/shared/config/Database';
-import { HYPEREVM_POOL_CONFIGS } from '../configs/pool-config';
+import { HyperswapPriceService } from './HyperswapPriceService.ts';
+import { PriceCollectionJob } from '../jobs/PriceCollectionJob.ts';
+import { db } from '../../shared/config/Database.ts';
+import { HYPEREVM_POOL_CONFIGS } from '../configs/pool-config.ts';
 
 export class PriceJobManager {
     private priceService!: HyperswapPriceService;

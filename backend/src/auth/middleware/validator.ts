@@ -1,6 +1,6 @@
 import { NextFunction } from "express";
 import type { Request, Response } from "express";
-import { ethereumSignatureValidation, ethereumWalletValidation } from "@/shared/utils/Validations";
+import { ethereumSignatureValidation, ethereumWalletValidation } from "../../shared/utils/Validations.ts";
 
 // Helper function for common validation logic
 const validateRequestBody = (req: Request, res: Response): boolean => {

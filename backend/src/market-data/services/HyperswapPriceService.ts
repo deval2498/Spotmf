@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
 import { ASSET_TYPE, PrismaClient } from "@prisma/client";
-import { abi as HyperswapPool } from "@/market-data/abis/HyperswapV3Pool.json"
-import type { PoolConfig } from "../types/market-data.types";
+import type { PoolConfig } from "../types/market-data.types.ts";
 
+const HyperswapPool = (await import("@/market-data/abis/HyperswapV3Pool.json", { assert: { type: "json" } })).default.abi;
 
 export class HyperswapPriceService {
     private provider: ethers.JsonRpcProvider;

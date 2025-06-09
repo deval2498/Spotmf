@@ -1,4 +1,4 @@
-import { HyperswapPriceService } from "../services/HyperswapPriceService";
+import { HyperswapPriceService } from "../services/HyperswapPriceService.ts";
 
 export class PriceCollectionJob {
     private isRunning = false;
