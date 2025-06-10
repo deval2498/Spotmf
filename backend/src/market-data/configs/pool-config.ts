@@ -11,10 +11,10 @@ export const HYPEREVM_POOL_CONFIGS: PoolConfig[] = [
   },
   {
     address: '0x7caC5c8ad2FB1216d3F262b2c9Cd5548D0329E78', // USDT/UBTC pool address - NEED THIS
-    token0: '0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb', // USDT
-    token1: '0x9FDBdA0A5e284c32744D2f17Ee5c74B284993463', // UBTC  
-    token0Decimals: 6, // USDT decimals
-    token1Decimals: 8, // UBTC decimals (adjust if different)
+    token1: '0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb', // USDT
+    token0: '0x9FDBdA0A5e284c32744D2f17Ee5c74B284993463', // USDT
+    token0Decimals: 8, // UBTC decimals
+    token1Decimals: 6, // USDT decimals (adjust if different)
     asset: 'UBTC'
   },
   {

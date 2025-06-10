@@ -1,4 +1,6 @@
 // src/server.ts
+import dotenv from 'dotenv';
+dotenv.config(); // ✅ Load .env at runtime
 import { createApp } from './app.ts';
 import { db } from './shared/config/Database.ts';
 

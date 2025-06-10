@@ -1,8 +1,9 @@
 import { ethers } from "ethers";
 import { ASSET_TYPE, PrismaClient } from "@prisma/client";
 import type { PoolConfig } from "../types/market-data.types.ts";
+import HyperswapPool from "../abis/HyperswapV3Pool.json" with { type: "json" };
 
-const HyperswapPool = (await import("@/market-data/abis/HyperswapV3Pool.json", { assert: { type: "json" } })).default.abi;
+const poolAbi = HyperswapPool.abi as ethers.InterfaceAbi;
 
 export class HyperswapPriceService {
     private provider: ethers.JsonRpcProvider;
@@ -17,7 +18,7 @@ export class HyperswapPriceService {
             throw new Error(`No pool configuration found: ${asset}`)
         }
         try {
-            const poolContract = new ethers.Contract(poolConfig.address, HyperswapPool, this.provider)
+            const poolContract = new ethers.Contract(poolConfig.address, HyperswapPool.abi, this.provider)
             const [sqrtPriceX96] = await poolContract.slot0(); 
             const price = this.sqrtPriceX96ToDecimal(
                 sqrtPriceX96,
@@ -93,7 +94,7 @@ export class HyperswapPriceService {
         try {
           const poolContract = new ethers.Contract(
             poolConfig.address,
-            HyperswapPool,
+            HyperswapPool.abi,
             this.provider
           );
     

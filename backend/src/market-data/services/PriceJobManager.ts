@@ -1,3 +1,14 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({
+  path: path.resolve(__dirname, '../../.env')  // adjust as needed
+});
 import { HyperswapPriceService } from './HyperswapPriceService.ts';
 import { PriceCollectionJob } from '../jobs/PriceCollectionJob.ts';
 import { db } from '../../shared/config/Database.ts';
@@ -20,8 +31,6 @@ export class PriceJobManager {
         )
 
         this.priceJob = new PriceCollectionJob(this.priceService)
-
-        this.isInitialized = true
     }
 
     async start(): Promise<void> {
@@ -31,6 +40,7 @@ export class PriceJobManager {
         }
     
         try {
+          this.isInitialized = true
           console.log('🚀 Starting price collection system...');
     
           // Connect to database
