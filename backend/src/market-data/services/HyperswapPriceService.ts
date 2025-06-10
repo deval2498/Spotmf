@@ -23,7 +23,8 @@ export class HyperswapPriceService {
             const price = this.sqrtPriceX96ToDecimal(
                 sqrtPriceX96,
                 poolConfig.token0Decimals,
-                poolConfig.token1Decimals
+                poolConfig.token1Decimals,
+                poolConfig.pricePerToken
             );
             console.log(`💰 ${asset} price from pool: ${price.toFixed(6)}`);
             return price;
@@ -156,20 +157,18 @@ export class HyperswapPriceService {
         });
       }
 
-    private sqrtPriceX96ToDecimal( sqrtPriceX96: ethers.BigNumberish, token0Decimals: number, token1Decimals: number) {
+    private sqrtPriceX96ToDecimal( sqrtPriceX96: ethers.BigNumberish, token0Decimals: number, token1Decimals: number, pricePerToken: 'T1' | 'T0') {
         try {
       // Constants
+      console.log("Trying to convert,", sqrtPriceX96, token0Decimals)
       const Q96 = 2n ** 96n;
       const PRECISION = 10n ** 18n;
-      
       // Convert sqrtPriceX96 to price
-      // price = (sqrtPriceX96 / 2^96)^2
-      const sqrtPrice = (BigInt(sqrtPriceX96) * PRECISION) / Q96;
+      const sqrtPrice = pricePerToken == 'T0' ? (BigInt(sqrtPriceX96) * PRECISION) / Q96 : (Q96 * PRECISION) / BigInt(sqrtPriceX96)
       const price = (sqrtPrice * sqrtPrice) / PRECISION;
-      
       // Adjust for decimal differences
       // If token0 has more decimals, price needs to be adjusted down
-      const decimalDifference = token0Decimals - token1Decimals;
+      const decimalDifference = pricePerToken == 'T0' ? token0Decimals - token1Decimals : token1Decimals - token0Decimals;
       let adjustedPrice: bigint;
       
       if (decimalDifference > 0) {
@@ -179,20 +178,48 @@ export class HyperswapPriceService {
       } else {
         adjustedPrice = price;
       }
-      
       // Convert to number with proper decimals
-      const divisor = 10n ** BigInt(token0Decimals);
+      const divisor = 10n ** BigInt(18n);
       const wholePart = adjustedPrice / divisor;
       const fractionalPart = adjustedPrice % divisor;
-      
       // Combine whole and fractional parts
       const result = Number(wholePart) + Number(fractionalPart) / Number(divisor);
-      
       return result;
-      
     } catch (error) {
       console.error('Error converting sqrtPriceX96 to price:', error);
       throw new Error('Failed to convert pool price');
     }
+    }
+    private sqrtPriceX96ToDecimalV2(
+      sqrtPriceX96: ethers.BigNumberish, 
+      token0Decimals: number, 
+      token1Decimals: number, 
+      pricePerToken: 'T1' | 'T0'
+    ): number {
+      try {
+        const Q96 = 2n ** 96n;
+        const sqrtPriceBigInt = BigInt(sqrtPriceX96);
+        
+        // Convert to floating point for easier calculation
+        const sqrtPriceFloat = Number(sqrtPriceBigInt) / Number(Q96);
+        const rawPrice = sqrtPriceFloat * sqrtPriceFloat;
+        
+        // Adjust for decimal differences
+        const decimalAdjustment = Math.pow(10, token1Decimals - token0Decimals);
+        let adjustedPrice = rawPrice * decimalAdjustment;
+        
+        // The adjusted price is now token1/token0 (how many token1 per token0)
+        if (pricePerToken === 'T1') {
+          // Want price of token1 in terms of token0 (token0/token1)
+          adjustedPrice = 1 / adjustedPrice;
+        }
+        // If pricePerToken === 'T0', we already have token1/token0
+        
+        return adjustedPrice;
+        
+      } catch (error) {
+        console.error('Error converting sqrtPriceX96 to price:', error);
+        throw new Error('Failed to convert pool price');
+      }
     }
 }
