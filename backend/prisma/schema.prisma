@@ -97,6 +97,7 @@ model User_Strategy {
 model PriceCache {
   id        String   @id @default(cuid())
   asset     String // 'UBTC', 'WBTC', 'WHYPE'
+  assetName String
   price     String   @db.VarChar(50) // Store as string to avoid precision issues
   source    String   @db.VarChar(10) // 'DEX', 'API'
   timestamp DateTime @default(now())
@@ -111,7 +112,8 @@ model PriceCache {
 model HistoricalPrice {
   id        String   @id @default(cuid())
   asset     String   @db.VarChar(10) // 'UBTC', 'WBTC', 'WHYPE'
-  date      DateTime @db.Date // Date only (no time)
+  assetName String
+  date      DateTime
   price     String   @db.VarChar(50) // Daily closing price
   source    String   @default("DEX") @db.VarChar(10) // 'DEX', 'API'
   createdAt DateTime @default(now()) @map("created_at")

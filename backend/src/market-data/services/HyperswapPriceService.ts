@@ -54,17 +54,22 @@ export class HyperswapPriceService {
         try {
             const prices = await this.getAllCurrentPoolPrices();
             const timestamp = new Date();
-
             for(const [asset, price] of Object.entries(prices)) {
+
+                const poolConfig = this.poolConfigs.find( p => asset == p.asset)
+                if(!poolConfig) {
+                  throw Error('Pool config not found')
+                }
                 await this.prisma.priceCache.create({
                     data: {
                         asset,
                         timestamp,
                         price: price.toString(),
-                        source: 'DEX'
+                        source: 'DEX',
+                        assetName: poolConfig?.assetName
                     }
                 })
-                await this.saveAsHistoricalPrice(asset, price, timestamp)
+                await this.saveAsHistoricalPrice(asset, price, timestamp, poolConfig.assetName)
             }
         } catch (error) {
             
@@ -133,7 +138,7 @@ export class HyperswapPriceService {
     
     
 
-    private async saveAsHistoricalPrice(asset: string, price: number, timestamp: Date): Promise<void> {
+    private async saveAsHistoricalPrice(asset: string, price: number, timestamp: Date, assetName: string): Promise<void> {
         const dateOnly = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
         
         await this.prisma.historicalPrice.upsert({
@@ -152,7 +157,8 @@ export class HyperswapPriceService {
             asset,
             date: dateOnly,
             price: price.toString(),
-            source: 'DEX'
+            source: 'DEX',
+            assetName
           }
         });
       }
@@ -189,37 +195,5 @@ export class HyperswapPriceService {
       console.error('Error converting sqrtPriceX96 to price:', error);
       throw new Error('Failed to convert pool price');
     }
-    }
-    private sqrtPriceX96ToDecimalV2(
-      sqrtPriceX96: ethers.BigNumberish, 
-      token0Decimals: number, 
-      token1Decimals: number, 
-      pricePerToken: 'T1' | 'T0'
-    ): number {
-      try {
-        const Q96 = 2n ** 96n;
-        const sqrtPriceBigInt = BigInt(sqrtPriceX96);
-        
-        // Convert to floating point for easier calculation
-        const sqrtPriceFloat = Number(sqrtPriceBigInt) / Number(Q96);
-        const rawPrice = sqrtPriceFloat * sqrtPriceFloat;
-        
-        // Adjust for decimal differences
-        const decimalAdjustment = Math.pow(10, token1Decimals - token0Decimals);
-        let adjustedPrice = rawPrice * decimalAdjustment;
-        
-        // The adjusted price is now token1/token0 (how many token1 per token0)
-        if (pricePerToken === 'T1') {
-          // Want price of token1 in terms of token0 (token0/token1)
-          adjustedPrice = 1 / adjustedPrice;
-        }
-        // If pricePerToken === 'T0', we already have token1/token0
-        
-        return adjustedPrice;
-        
-      } catch (error) {
-        console.error('Error converting sqrtPriceX96 to price:', error);
-        throw new Error('Failed to convert pool price');
-      }
     }
 }

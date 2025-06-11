@@ -5,7 +5,8 @@ export interface PoolConfig {
     token0Decimals: number;
     token1Decimals: number;
     asset: string;
-    pricePerToken: 'T0' | 'T1'
+    pricePerToken: 'T0' | 'T1',
+    assetName: string
 }
 
 export interface PriceData {
