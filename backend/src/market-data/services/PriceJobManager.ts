@@ -13,11 +13,13 @@ import { HyperswapPriceService } from './HyperswapPriceService.ts';
 import { PriceCollectionJob } from '../jobs/PriceCollectionJob.ts';
 import { db } from '../../shared/config/Database.ts';
 import { HYPEREVM_POOL_CONFIGS } from '../configs/pool-config.ts';
+import { HistoricalDataManager } from './HistoricalDataManager.ts';
 
 export class PriceJobManager {
     private priceService!: HyperswapPriceService;
     private priceJob!: PriceCollectionJob;
     private isInitialized = false;
+    private historicalPriceService!: HistoricalDataManager
 
     constructor() {
         this.initializeJob()
@@ -29,7 +31,7 @@ export class PriceJobManager {
             process.env.HYPEREVM_RPC_URL!,
             HYPEREVM_POOL_CONFIGS
         )
-
+        this.historicalPriceService = new HistoricalDataManager(db.getClient(), HYPEREVM_POOL_CONFIGS)
         this.priceJob = new PriceCollectionJob(this.priceService)
     }
 
@@ -42,13 +44,13 @@ export class PriceJobManager {
         try {
           this.isInitialized = true
           console.log('🚀 Starting price collection system...');
-    
           // Connect to database
           await db.connect();
-    
+          
           // Validate pool configurations
           await this.validatePoolConfigurations();
-    
+          
+          await this.historicalPriceService.ensureHistoricalData();
           // Test price fetching
           await this.testPriceFetching();
     

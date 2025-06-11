@@ -9,7 +9,7 @@ export const HYPEREVM_POOL_CONFIGS: PoolConfig[] = [
     token1Decimals: 18, // UETH decimals (adjust if different)
     asset: 'UETH',
     pricePerToken: 'T1',
-    assetName: 'ETH'
+    assetName: 'ethereum'
   },
   {
     address: '0x7caC5c8ad2FB1216d3F262b2c9Cd5548D0329E78', // USDT/UBTC pool address - NEED THIS
@@ -19,7 +19,7 @@ export const HYPEREVM_POOL_CONFIGS: PoolConfig[] = [
     token1Decimals: 6, // USDT decimals (adjust if different)
     asset: 'UBTC',
     pricePerToken: 'T0',
-    assetName: 'BTC'
+    assetName: 'bitcoin'
   },
   {
     address: '0x7f63aC9b82905d870071024FA310cF0Ab8A74ad1', // USDT/WHYPE pool address - NEED THIS
@@ -29,6 +29,6 @@ export const HYPEREVM_POOL_CONFIGS: PoolConfig[] = [
     token1Decimals: 6, // USDT decimals (adjust if different)
     asset: 'WHYPE',
     pricePerToken: 'T0',
-    assetName: 'HYPE'
+    assetName: 'hyperliquid'
   }
 ]
