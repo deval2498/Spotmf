@@ -28,7 +28,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <WagmiConfigProvider>{children}</WagmiConfigProvider>
+        {children}
+        {/* <WagmiConfigProvider>{children}</WagmiConfigProvider> */}
       </body>
     </html>
   );
