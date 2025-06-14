@@ -24,6 +24,26 @@ const getPathBounds = (pathElement) => {
   }
 };
 
+const getCircleAndWElements = () => {
+  const paths = document.querySelectorAll("path");
+  console.log(paths);
+  return Array.from(paths).filter((path) => {
+    return path.id == "WLetter" || path.id == "CircleRing";
+  });
+};
+
+// Select multiple paths and translate as a group
+const translateMultiplePaths = (selectors, targetX, targetY, duration = 1) => {
+  const paths = gsap.utils.toArray(selectors);
+
+  gsap.to(paths, {
+    x: targetX,
+    y: targetY,
+    duration: duration,
+    ease: "power2.inOut",
+  });
+};
+
 // Individual letter component
 const AnimatedLetter = ({
   pathData,
@@ -43,15 +63,19 @@ const AnimatedLetter = ({
   circleOffsetY = 0, // Offset from letter center
   hideAfterCircle = true, // Whether to hide the letter after circle completes
   onComplete = null,
+  id = "",
 }) => {
   const pathRef = useRef(null);
   const groupRef = useRef(null);
-
   useEffect(() => {
     if (!pathRef.current || !pathData) return;
 
     const path = pathRef.current;
     const group = groupRef.current;
+    console.log(id, "checking id");
+    if (id && id.length > 0) {
+      path.id = id;
+    }
     let cycleCount = 0;
     let hasStartedCircle = false;
 
@@ -75,15 +99,6 @@ const AnimatedLetter = ({
           } else {
             cycleCount += 1;
           }
-          console.log(
-            cycleCount,
-            disappearAfterCycles,
-            pathData,
-            "checking data"
-          );
-          if (disappearAfterCycles && cycleCount >= disappearAfterCycles) {
-            animateDisappear(path, tl);
-          }
 
           // Check if we should start circle animation
           if (
@@ -92,8 +107,12 @@ const AnimatedLetter = ({
             !hasStartedCircle
           ) {
             hasStartedCircle = true;
+
             startCircleAnimation(path, group, bounds);
-            return;
+          }
+
+          if (disappearAfterCycles && cycleCount >= disappearAfterCycles) {
+            animateDisappear(path, tl);
           }
 
           // Check if we should disappear
@@ -101,18 +120,7 @@ const AnimatedLetter = ({
       });
 
       // Main drawing animation
-      tl.fromTo(
-        path,
-        {
-          drawSVG: "0%",
-          fill: "transparent",
-        },
-        {
-          drawSVG: "100%",
-          duration: duration,
-          ease: "power2.inOut",
-        }
-      ).to(
+      tl.to(
         path,
         {
           fill: fillColor,
@@ -127,33 +135,9 @@ const AnimatedLetter = ({
     const startCircleAnimation = (path, group, bounds) => {
       console.log("Starting circle animation for letter");
 
-      // Stop the main timeline
-      //   gsap.globalTimeline.getChildren().forEach((tween) => {
-      //     // Timeline objects don't have 'targets' property
-      //     tween.repeat(0);
-      //   });
-
-      // Fill the letter immediately
-      gsap.to(path, {
-        fill: fillColor,
-        drawSVG: "100%",
-        duration: 0.5,
-        ease: "power2.inOut",
-      });
-
       // Calculate circle center relative to letter center
       const circleCenterX = bounds.centerX + circleOffsetX - 24;
       const circleCenterY = bounds.centerY + circleOffsetY + 15;
-
-      console.log(`Circle center: (${circleCenterX}, ${circleCenterY})`);
-      console.log(`Letter center: (${bounds.centerX}, ${bounds.centerY})`);
-
-      // Get current letter position
-      const currentTransform = gsap.getProperty(group, "transform") || "";
-      const currentX = gsap.getProperty(group, "x") || 0;
-      const currentY = gsap.getProperty(group, "y") || 0;
-
-      console.log(`Current letter position: (${currentX}, ${currentY})`);
 
       // Create circular path element
       const svg = group.closest("svg");
@@ -179,8 +163,6 @@ const AnimatedLetter = ({
       const targetX = circleCenterX + Math.cos(startAngle) * circleRadius;
       const targetY = circleCenterY + Math.sin(startAngle) * circleRadius;
 
-      console.log(`Target position: (${targetX}, ${targetY})`);
-
       // STEP 1: Translate letter to circle starting position
       gsap.to(group, {
         x: targetX - bounds.centerX,
@@ -189,11 +171,11 @@ const AnimatedLetter = ({
         ease: "power2.inOut",
         onComplete: () => {
           console.log("Translation complete, starting rotation...");
-
           // Hide the letter if specified
           if (hideAfterCircle) {
             gsap.to(path, {
               opacity: 0,
+              scale: 0,
               duration: 0.3,
             });
           }
@@ -219,6 +201,7 @@ const AnimatedLetter = ({
                 circlePathElement.setAttribute("d", finalPathData);
               }
 
+              translateMultiplePaths(["#WLetter", "#CircleRing"], -600, -75);
               return; // Stop animation
             }
 
@@ -238,13 +221,15 @@ const AnimatedLetter = ({
             // Update circular path
             const pathData = createCircularPath(pathPoints, false);
             circlePathElement.setAttribute("d", pathData);
-
+            circlePathElement.setAttribute("id", "CircleRing");
             // Continue animation
             requestAnimationFrame(circleAnimation);
           };
 
           // Start the circular animation
           circleAnimation();
+
+          console.log(getCircleAndWElements(), "Getting eelements");
         },
       });
     };
@@ -315,6 +300,7 @@ const AnimatedLetter = ({
     circleOffsetY,
     hideAfterCircle,
     onComplete,
+    id,
   ]);
 
   if (!pathData) {
@@ -385,6 +371,7 @@ const AnimatedText = ({
                   : true
               }
               onComplete={letter.onComplete || null}
+              id={letter.id || null}
             />
           ))}
         </svg>
@@ -401,6 +388,7 @@ export function SimpleBall() {
         "M17.95 26.90L11.25 47L8.25 47L0 22L3.65 21.75L10 42.90L16.50 22L19.65 21.75L25.25 42.95L32.60 22L36.45 21.75L26.85 47L23.85 47L17.95 26.90Z",
       x: 0,
       y: 0,
+      id: "WLetter",
       delay: 0,
       repeat: 2,
       circleAfterCycles: 2,
@@ -429,7 +417,9 @@ export function SimpleBall() {
       circleRadius: 25,
       circleOffsetX: 0,
       circleOffsetY: 5,
-      hideAfterCircle: true, // Keep the dot visible
+      hideAfterCircle: false, // Keep the dot visible
+      stickAfterCircle: true,
+      disappearAfterCycles: 3,
     },
     {
       pathData:
