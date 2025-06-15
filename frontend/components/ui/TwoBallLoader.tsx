@@ -1,12 +1,48 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 
 // Register the plugin
 gsap.registerPlugin(DrawSVGPlugin);
 
-// Utility function to calculate SVG path bounding box
+// Select multiple paths and translate as a group
+
+const getActualPosition = (selector) => {
+  const element = document.querySelector(selector);
+  if (!element) return { x: 0, y: 0 };
+
+  // Try GSAP transform first
+  let x = gsap.getProperty(element, "x");
+  let y = gsap.getProperty(element, "y");
+
+  // If no GSAP transform, get from DOM
+  if (x === 0 && y === 0) {
+    const rect = element.getBoundingClientRect();
+    const svg = element.closest("svg");
+    const svgRect = svg ? svg.getBoundingClientRect() : { left: 0, top: 0 };
+
+    x = rect.left - svgRect.left;
+    y = rect.top - svgRect.top;
+
+    console.log("No GSAP transform found, using DOM position:", { x, y });
+  }
+
+  return { x, y };
+};
+
+const translateMultiplePaths = (selectors, targetX, targetY, duration = 1) => {
+  const paths = gsap.utils.toArray(selectors);
+
+  const positionW = getActualPosition("#WLetter");
+  gsap.to(paths, {
+    x: targetX - positionW.x,
+    y: targetY - positionW.y,
+    duration: duration,
+    ease: "power2.inOut",
+  });
+};
+
 const getPathBounds = (pathElement) => {
   try {
     const bbox = pathElement.getBBox();
@@ -22,26 +58,6 @@ const getPathBounds = (pathElement) => {
     console.warn("Could not get path bounds:", error);
     return { x: 0, y: 0, width: 0, height: 0, centerX: 0, centerY: 0 };
   }
-};
-
-const getCircleAndWElements = () => {
-  const paths = document.querySelectorAll("path");
-  console.log(paths);
-  return Array.from(paths).filter((path) => {
-    return path.id == "WLetter" || path.id == "CircleRing";
-  });
-};
-
-// Select multiple paths and translate as a group
-const translateMultiplePaths = (selectors, targetX, targetY, duration = 1) => {
-  const paths = gsap.utils.toArray(selectors);
-
-  gsap.to(paths, {
-    x: targetX,
-    y: targetY,
-    duration: duration,
-    ease: "power2.inOut",
-  });
 };
 
 // Individual letter component
@@ -67,6 +83,7 @@ const AnimatedLetter = ({
 }) => {
   const pathRef = useRef(null);
   const groupRef = useRef(null);
+
   useEffect(() => {
     if (!pathRef.current || !pathData) return;
 
@@ -201,7 +218,12 @@ const AnimatedLetter = ({
                 circlePathElement.setAttribute("d", finalPathData);
               }
 
-              translateMultiplePaths(["#WLetter", "#CircleRing"], -600, -75);
+              translateMultiplePaths(
+                ["#WLetter", "#CircleRing"],
+                window.innerWidth * 0.1, // 10% from left
+                window.innerHeight * 0.1 // 10% from top
+              );
+
               return; // Stop animation
             }
 
@@ -382,6 +404,42 @@ const AnimatedText = ({
 
 // Production-ready demo component
 export function SimpleBall() {
+  const [dimensions, setDimensions] = useState({
+    containerWidth: window.innerWidth,
+    containerHeight: window.innerHeight,
+    viewBox: `${window.innerWidth / 2} ${window.innerHeight / 2} ${
+      window.innerWidth
+    } ${window.innerHeight}`,
+  });
+
+  useEffect(() => {
+    function calculateDimensions() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // Padding is half the container dimensions
+      const paddingX = width / 2;
+      const paddingY = height / 2;
+
+      // ViewBox: -paddingX -paddingY containerWidth containerHeight
+      const viewBox = `${-paddingX} ${-paddingY} ${width} ${height}`;
+
+      setDimensions({
+        containerWidth: width,
+        containerHeight: height,
+        viewBox: viewBox,
+      });
+    }
+
+    // Calculate initial dimensions
+    calculateDimensions();
+
+    // Add resize listener
+    window.addEventListener("resize", calculateDimensions);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", calculateDimensions);
+  }, []);
   const letterPaths = [
     {
       pathData:
@@ -434,9 +492,9 @@ export function SimpleBall() {
   return (
     <AnimatedText
       letters={letterPaths}
-      containerWidth={400}
-      containerHeight={400}
-      viewBox="-50 -50 300 300"
+      containerWidth={dimensions.containerWidth}
+      containerHeight={dimensions.containerHeight}
+      viewBox={dimensions.viewBox}
       strokeColor="#f6339a"
       fillColor="#f6339a"
       strokeWidth={0.25}
