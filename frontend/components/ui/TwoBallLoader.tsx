@@ -40,6 +40,8 @@ const translateMultiplePaths = (selectors, targetX, targetY, duration = 1) => {
     y: targetY - positionW.y,
     duration: duration,
     ease: "power2.inOut",
+    scale: 0.5,
+    transformOrigin: "center center",
   });
 };
 
