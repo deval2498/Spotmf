@@ -395,7 +395,6 @@ export function AnimatedLogo({ onAnimationComplete }) {
       duration={2}
       repeat={-1}
       yoyo={true}
-      isClickable={isAnimationComplete}
     />
   );
 }

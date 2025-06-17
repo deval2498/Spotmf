@@ -10,68 +10,20 @@ export function useNavbarAnimation({ startAnimation = false }) {
   useEffect(() => {
     if (!startAnimation) return;
 
-    // Small delay to ensure refs are populated
-    const timer = setTimeout(() => {
-      const menuItems = menuItemsRef.current.filter(Boolean);
-      const socialButtons = socialButtonsRef.current.filter(Boolean);
-      const launchButton = launchButtonRef.current;
+    const menuItems = menuItemsRef.current.filter(Boolean);
 
+    if (menuItems.length > 0) {
       // Set initial hidden state
-      if (menuItems.length > 0) {
-        gsap.set(menuItems, { opacity: 0, y: -20 });
-      }
-      if (socialButtons.length > 0) {
-        gsap.set(socialButtons, { opacity: 0, y: -20 });
-      }
-      if (launchButton) {
-        gsap.set(launchButton, { opacity: 0, y: -20 });
-      }
+      gsap.set(menuItems, { opacity: 0 });
 
-      // Create timeline
-      const tl = gsap.timeline();
-
-      // Animate menu items first
-      if (menuItems.length > 0) {
-        tl.to(menuItems, {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          stagger: 0.1,
-          ease: "power2.out",
-        });
-      }
-
-      // Animate social buttons
-      if (socialButtons.length > 0) {
-        tl.to(
-          socialButtons,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: "power2.out",
-          },
-          "-=0.2"
-        );
-      }
-
-      // Animate launch button
-      if (launchButton) {
-        tl.to(
-          launchButton,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.5,
-            ease: "power2.out",
-          },
-          "-=0.3"
-        );
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
+      // Animate to visible
+      gsap.to(menuItems, {
+        opacity: 1,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: "power2.out",
+      });
+    }
   }, [startAnimation]);
 
   const addToMenuRefs = (el) => {
@@ -80,15 +32,7 @@ export function useNavbarAnimation({ startAnimation = false }) {
     }
   };
 
-  const addToSocialRefs = (el) => {
-    if (el && !socialButtonsRef.current.includes(el)) {
-      socialButtonsRef.current.push(el);
-    }
-  };
-
   return {
-    launchButtonRef,
     addToMenuRefs,
-    addToSocialRefs,
   };
 }

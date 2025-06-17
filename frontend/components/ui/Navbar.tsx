@@ -6,10 +6,9 @@ import { MdOutlineLightMode } from "react-icons/md";
 import { useNavbarAnimation } from "../../hooks/useNavbarAnimation";
 
 export function Navbar({ showNavbar = false }) {
-  const { launchButtonRef, addToMenuRefs, addToSocialRefs } =
-    useNavbarAnimation({
-      startAnimation: showNavbar,
-    });
+  const { addToMenuRefs } = useNavbarAnimation({
+    startAnimation: showNavbar,
+  });
 
   if (!showNavbar) {
     return (
@@ -20,10 +19,8 @@ export function Navbar({ showNavbar = false }) {
               {/* Logo placeholder - this is where the animated logo will land */}
               <div
                 id="navbar-logo-placeholder"
-                className="w-16 h-8 flex items-center justify-center"
-              >
-                {/* Empty placeholder for logo */}
-              </div>
+                className="flex items-center justify-center"
+              ></div>
               <div className="opacity-0">Hidden content</div>
               <div className="opacity-0">Hidden content</div>
             </div>
@@ -41,28 +38,26 @@ export function Navbar({ showNavbar = false }) {
             {/* Logo area - the animated logo will be positioned here */}
             <div
               id="navbar-logo-placeholder"
-              className="w-16 h-8 flex items-center justify-center"
-            >
-              {/* The animated SVG will be positioned over this */}
-            </div>
+              className="flex items-center justify-center"
+            ></div>
 
             {/* Menu items */}
             <div className="flex gap-5 text-sm text-gray-300">
               <div
                 ref={addToMenuRefs}
-                className="hover:text-orange-300 hover:cursor-pointer transition-colors duration-200"
+                className="hover:text-orange-300 cursor-pointer opacity-0"
               >
                 How it works?
               </div>
               <div
                 ref={addToMenuRefs}
-                className="hover:text-orange-300 hover:cursor-pointer transition-colors duration-200"
+                className="hover:text-orange-300 cursor-pointer opacity-0"
               >
                 Explore Strategies
               </div>
               <div
                 ref={addToMenuRefs}
-                className="hover:text-orange-300 hover:cursor-pointer transition-colors duration-200"
+                className="hover:text-orange-300 cursor-pointer opacity-0"
               >
                 Why its safe?
               </div>
@@ -71,33 +66,29 @@ export function Navbar({ showNavbar = false }) {
             {/* Right side buttons */}
             <div className="flex gap-5">
               <div className="flex gap-3">
-                <button
-                  ref={addToSocialRefs}
-                  className="hover:scale-110 transition-transform duration-200 p-1"
-                >
-                  <FiGithub stroke="#d1d5dc" cursor="pointer" size={18} />
+                <button ref={addToMenuRefs} className="p-1 opacity-0 group">
+                  <FiGithub
+                    className="stroke-gray-300 group-hover:stroke-orange-400 transition-colors duration-200"
+                    size={18}
+                  />
                 </button>
-                <button
-                  ref={addToSocialRefs}
-                  className="hover:scale-110 transition-transform duration-200 p-1"
-                >
-                  <FaDiscord fill="#d1d5dc" cursor="pointer" size={18} />
+                <button ref={addToMenuRefs} className="p-1 opacity-0 group">
+                  <FaDiscord
+                    className="fill-gray-300 group-hover:fill-orange-400 transition-colors duration-200"
+                    size={18}
+                  />
                 </button>
-                <button
-                  ref={addToSocialRefs}
-                  className="hover:scale-110 transition-transform duration-200 p-1"
-                >
+                <button ref={addToMenuRefs} className="p-1 opacity-0 group">
                   <MdOutlineLightMode
-                    fill="#d1d5dc"
-                    cursor="pointer"
+                    className="fill-gray-300 group-hover:fill-orange-400 transition-colors duration-200"
                     size={18}
                   />
                 </button>
               </div>
 
               <button
-                ref={launchButtonRef}
-                className="border border-pink-500 px-4 py-2 rounded-xl hover:cursor-pointer hover:bg-pink-500 transition-all duration-200 font-medium"
+                ref={addToMenuRefs}
+                className="border border-pink-500 px-4 py-2 rounded-xl cursor-pointer hover:bg-pink-500 font-medium opacity-0"
               >
                 Launch App
               </button>

@@ -18,6 +18,7 @@ export function useLogoAnimation({
   const [dimensions, setDimensions] = useState<Dimensions | null>(null);
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const [animationState, setAnimationState] = useState("initial");
+  const resizeCleanupRef = useRef(null);
 
   // Store the current animation timeline
   const currentAnimationRef = useRef<gsap.core.Tween | null>(null);
@@ -66,8 +67,36 @@ export function useLogoAnimation({
     const svg = document.querySelector("#animated-logo-svg");
     const svgRect = svg ? svg.getBoundingClientRect() : { left: 0, top: 0 };
 
-    const x = rect.left - svgRect.left - currentDimensions.containerWidth / 2;
-    const y = rect.top - svgRect.top - currentDimensions.containerHeight / 2;
+    // Account for navbar padding (p-2 = 8px) and logo placeholder padding
+    const navbarPadding = 8; // p-2 in Tailwind
+    const logoPlaceholderPadding = 8; // Additional padding in the placeholder
+
+    // Calculate x position:
+    // 1. Start from the left edge of the placeholder
+    // 2. Add navbar padding
+    // 3. Add logo placeholder padding
+    // 4. Subtract SVG's left position to get relative position
+    // 5. Subtract half container width to center the logo
+    const x =
+      rect.left +
+      navbarPadding +
+      logoPlaceholderPadding -
+      svgRect.left -
+      currentDimensions.containerWidth / 2 -
+      16;
+
+    // Calculate y position:
+    // 1. Get the top of the placeholder
+    // 2. Add half the placeholder height to get its center
+    // 3. Subtract the SVG's top position to get relative position
+    // 4. Subtract half the container height to center the logo
+    // 5. Add a small offset to move it up slightly (adjust this value as needed)
+    const y =
+      rect.top +
+      rect.height / 2 -
+      svgRect.top -
+      currentDimensions.containerHeight / 2 -
+      24;
 
     return { x, y };
   }, []);
@@ -128,32 +157,14 @@ export function useLogoAnimation({
           },
         });
       }
-    } else if (animationState === "complete") {
-      // If animation is complete, just update the final position
-      const completedElements = ["#WLetter", "#CircleRing"]
-        .map((sel) => {
-          const element = document.querySelector(sel);
-          return element ? element.closest("g") || element : null;
-        })
-        .filter(Boolean);
-
-      if (completedElements.length > 0) {
-        const newTarget = getNavbarPosition(newDimensions);
-        gsap.set(completedElements, {
-          x: newTarget.x,
-          y: newTarget.y,
-        });
-      }
     }
   }, [animationState, calculateDimensions, getNavbarPosition]);
 
   // Handle resize based on current state
   const handleResize = useCallback(() => {
-    // Handle resize immediately for all states
     handleAnimationResize();
   }, [handleAnimationResize]);
 
-  // Initialize dimensions and set up resize listener
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -166,8 +177,15 @@ export function useLogoAnimation({
     // Add resize listener
     window.addEventListener("resize", handleResize);
 
-    return () => {
+    // Store cleanup function
+    resizeCleanupRef.current = () => {
       window.removeEventListener("resize", handleResize);
+    };
+
+    return () => {
+      if (resizeCleanupRef.current) {
+        resizeCleanupRef.current();
+      }
     };
   }, [handleResize, calculateDimensions]);
 
@@ -231,6 +249,62 @@ export function useLogoAnimation({
           if (onAnimationCompleteRef.current) {
             onAnimationCompleteRef.current();
           }
+          //   const completedElements = ["#WLetter", "#CircleRing"]
+          //     .map((sel) => {
+          //       const element = document.querySelector(sel);
+          //       return element ? element.closest("g") || element : null;
+          //     })
+          //     .filter(Boolean);
+
+          //   if (completedElements.length > 0) {
+          //     const svg = completedElements[0].closest("svg");
+          //     const placeholder = document.querySelector(
+          //       "#navbar-logo-placeholder"
+          //     );
+
+          //     if (svg && placeholder) {
+          //       console.log("Original SVG:", svg);
+          //       console.log("SVG current styles:", window.getComputedStyle(svg));
+
+          //       // Reset SVG completely
+          //       gsap.set(svg, {
+          //         width: "30px",
+          //         height: "30px",
+          //         position: "static",
+          //         transform: "none",
+          //         display: "block", // Ensure it's visible
+          //         opacity: 1, // Ensure it's not transparent
+          //         scale: 1.1,
+          //       });
+
+          //       svg.setAttribute("viewBox", "-12 0 55 59");
+
+          //       gsap.set(completedElements, {
+          //         x: 0,
+          //         y: 0,
+          //         transform: "none",
+          //       });
+
+          //       // Clear placeholder and move SVG
+          //       placeholder.innerHTML = "";
+          //       placeholder.style.display = "flex"; // Ensure placeholder is visible
+          //       placeholder.style.alignItems = "center";
+          //       placeholder.style.justifyContent = "center";
+
+          //       const child = placeholder.appendChild(svg);
+          //       console.log("SVG after move:", child);
+          //       console.log("Placeholder after move:", placeholder);
+          //       console.log("Placeholder innerHTML:", placeholder.innerHTML);
+
+          //       // Remove the resize listener permanently
+          //       if (resizeCleanupRef.current) {
+          //         console.log("Removing ref", resizeCleanupRef);
+          //         resizeCleanupRef.current();
+          //         resizeCleanupRef.current = null;
+          //       }
+          //       setAnimationState("navbar-ready");
+          //     }
+          //   }
         },
       });
     };
