@@ -14,12 +14,13 @@ export function useNavbarAnimation({ startAnimation = false }) {
 
     if (menuItems.length > 0) {
       // Set initial hidden state
-      gsap.set(menuItems, { opacity: 0 });
+      gsap.set(menuItems, { opacity: 0, y: -20 });
 
       // Animate to visible
       gsap.to(menuItems, {
         opacity: 1,
         duration: 0.5,
+        y: 0,
         stagger: 0.1,
         ease: "power2.out",
       });

@@ -2,6 +2,7 @@
 import { Navbar } from "@/components/ui/Navbar";
 import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
 import { useState } from "react";
+import { Hero, HeroAdvanced } from "@/components/ui/Hero";
 // import Wallet from "./components/Wallet";
 export default function Home() {
   const [showNavbar, setShowNavbar] = useState(false);
@@ -19,14 +20,7 @@ export default function Home() {
       <Navbar showNavbar={showNavbar} />
 
       {/* Rest of your content */}
-      <div className="pt-20 px-4">
-        <div className="max-w-4xl mx-auto text-white">
-          <h1 className="text-4xl font-bold mb-4">Your App Content</h1>
-          <p className="text-gray-300">
-            Logo animation runs first, then navbar animates in.
-          </p>
-        </div>
-      </div>
+      <Hero showHero={showNavbar} />
     </div>
   );
 }

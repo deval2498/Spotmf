@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Matangi:wght@500&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -5,11 +6,58 @@
   --foreground: #171717;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-matangi: 'Matangi', sans-serif;
+}
+
+.matangi-light {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.matangi-normal {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.matangi-medium {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+.matangi-semibold {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.matangi-bold {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+}
+.matangi-extrabold {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
+}
+.matangi-thick {
+  font-family: var(--font-family-matangi);
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +67,40 @@
   }
 }
 
+
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.animated-dark-gradient {
+  background: linear-gradient(
+    -45deg,
+    hsl(240, 70%, 15%),
+    hsl(210, 60%, 10%),
+    hsl(180, 80%, 20%),
+    hsl(150, 70%, 15%)
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.dark-pink-gradient {
+  background: linear-gradient(
+    135deg,
+    #000000 0%,
+    hsl(21, 48%, 8%) 20%,
+    #050005 40%,
+    hsl(13, 56%, 8%) 60%,
+    #020002 80%,
+    hsl(22, 52%, 9%) 100%
+  );
 }

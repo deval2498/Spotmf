@@ -4,11 +4,13 @@ import { FiGithub } from "react-icons/fi";
 import { FaDiscord } from "react-icons/fa";
 import { MdOutlineLightMode } from "react-icons/md";
 import { useNavbarAnimation } from "../../hooks/useNavbarAnimation";
+import { useRouter } from "next/navigation";
 
 export function Navbar({ showNavbar = false }) {
   const { addToMenuRefs } = useNavbarAnimation({
     startAnimation: showNavbar,
   });
+  const router = useRouter();
 
   if (!showNavbar) {
     return (
@@ -31,7 +33,7 @@ export function Navbar({ showNavbar = false }) {
   }
 
   return (
-    <div className="absolute inset-x-0">
+    <div className="sticky inset-x-0">
       <div className="max-w-5xl mx-auto rounded-2xl mt-2 text-white">
         <div className="p-2">
           <div className="flex justify-between items-center">
@@ -88,6 +90,7 @@ export function Navbar({ showNavbar = false }) {
 
               <button
                 ref={addToMenuRefs}
+                onClick={() => router.push("/dashboard")}
                 className="border border-pink-500 px-4 py-2 rounded-xl cursor-pointer hover:bg-pink-500 font-medium opacity-0"
               >
                 Launch App

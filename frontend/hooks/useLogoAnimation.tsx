@@ -33,7 +33,7 @@ export function useLogoAnimation({
   // Calculate dimensions
   const calculateDimensions = useCallback((): Dimensions | null => {
     if (typeof window === "undefined") return null;
-
+    console.log("Calculating dimensions");
     const width = window.innerWidth;
     const height = window.innerHeight;
     const paddingX = width / 2;
@@ -50,6 +50,7 @@ export function useLogoAnimation({
   // Get navbar position based on current dimensions
   const getNavbarPosition = useCallback((currentDimensions: Dimensions) => {
     const logoPlaceholder = document.querySelector("#navbar-logo-placeholder");
+    console.log("Calcuting navbar position");
     if (!logoPlaceholder || !currentDimensions) {
       console.warn(
         "Logo placeholder not found or no dimensions, using fallback position"
@@ -119,6 +120,7 @@ export function useLogoAnimation({
 
     // Handle resize based on animation state
     if (animationState === "transitioning") {
+      console.log("translating");
       const logoElements = ["#WLetter", "#CircleRing"]
         .map((sel) => {
           const element = document.querySelector(sel);
@@ -154,6 +156,9 @@ export function useLogoAnimation({
             if (onAnimationCompleteRef.current) {
               onAnimationCompleteRef.current();
             }
+            if (resizeCleanupRef.current) {
+              resizeCleanupRef.current = null;
+            }
           },
         });
       }
@@ -162,29 +167,33 @@ export function useLogoAnimation({
 
   // Handle resize based on current state
   const handleResize = useCallback(() => {
+    console.log("handle resize");
     handleAnimationResize();
   }, [handleAnimationResize]);
 
   useEffect(() => {
+    console.log("use effect");
     if (typeof window === "undefined") return;
 
-    // Initialize dimensions
-    const initialDimensions = calculateDimensions();
-    if (initialDimensions) {
-      setDimensions(initialDimensions);
+    if (animationState != "complete") {
+      // Initialize dimensions
+      const initialDimensions = calculateDimensions();
+      if (initialDimensions) {
+        setDimensions(initialDimensions);
+      }
+
+      // Add resize listener
+      window.addEventListener("resize", handleResize);
+
+      // Store cleanup function
+      resizeCleanupRef.current = () => {
+        window.removeEventListener("resize", handleResize);
+      };
     }
-
-    // Add resize listener
-    window.addEventListener("resize", handleResize);
-
-    // Store cleanup function
-    resizeCleanupRef.current = () => {
-      window.removeEventListener("resize", handleResize);
-    };
 
     return () => {
       if (resizeCleanupRef.current) {
-        resizeCleanupRef.current();
+        resizeCleanupRef.current = null;
       }
     };
   }, [handleResize, calculateDimensions]);
