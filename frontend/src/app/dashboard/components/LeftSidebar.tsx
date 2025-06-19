@@ -3,7 +3,7 @@ import { GrTransaction } from "react-icons/gr";
 import { GiTwoCoins } from "react-icons/gi";
 export function LeftSidebar() {
   return (
-    <div className="min-w-70 max-w-70 bg-gray-800/20 rounded-2xl overflow-scroll min-h-full">
+    <div className="min-w-70 max-w-70 bg-gradient-to-br from-slate-600/30 via-slate-500/20 to-slate-700/40 backdrop-blur-sm rounded-2xl overflow-scroll min-h-full">
       <div className="flex flex-col py-6 px-8 gap-2">
         <div className="font-bold">
           <span className="font-matangi text-white">Wig</span>

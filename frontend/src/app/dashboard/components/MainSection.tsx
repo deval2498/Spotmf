@@ -3,10 +3,13 @@ import { TbArrowZigZag } from "react-icons/tb";
 import { FaEthereum } from "react-icons/fa";
 import { LiaDollarSignSolid } from "react-icons/lia";
 import Image from "next/image";
+import { OverviewCard } from "./OverviewCard";
+import ActivityTable from "./DashboardActivityComponent";
+import Wallet from "../../components/Wallet";
 
 export function MainSection() {
   return (
-    <div className=" w-full rounded-2xl p-6">
+    <div className=" w-full rounded-2xl p-6 flex flex-col gap-4 overflow-y-scroll">
       <div className="flex justify-between items-center">
         <div className="flex gap-2 text-xs text-gray-400">
           <div className="flex gap-1 items-center">
@@ -44,11 +47,11 @@ export function MainSection() {
           </div>
         </div>
         <div>
-          <button className="bg-white p-3 rounded-3xl hover:cursor-pointer hover:scale-105 hover:shadow-lg transition duration-100 ease-in-out">
-            Connect wallet
-          </button>
+          <Wallet className="bg-white text-black rounded-xl" />
         </div>
       </div>
+      <OverviewCard />
+      <ActivityTable />
     </div>
   );
 }
