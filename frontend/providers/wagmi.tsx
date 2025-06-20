@@ -1,18 +1,13 @@
 "use client";
-// 1. Import modules
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
-import { config } from "@/config/config";
-import { ReactNode } from "react";
+import { config } from "./config";
+import React from "react";
 
 // 2. Set up a React Query client.
 const queryClient = new QueryClient();
 
-export default function WagmiConfigProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function WagmiConfigProvider({ children }) {
   // 3. Wrap app with Wagmi and React Query context.
   return (
     <WagmiProvider config={config}>

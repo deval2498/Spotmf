@@ -47,7 +47,7 @@ export function MainSection() {
           </div>
         </div>
         <div>
-          <Wallet className="bg-white text-black rounded-xl" />
+          <Wallet className="border border-pink-500 text-pink-500 rounded-xl p-2 text-sm" />
         </div>
       </div>
       <OverviewCard />

@@ -168,7 +168,7 @@ const ActivityTable = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-600/20 to-slate-700/20 backdrop-blur-sm border border-slate-600/60 rounded-2xl p-3 shadow-xl">
+    <div className="bg-gradient-to-br from-slate-600/20 via-slate-500/20 to-slate-700/20 backdrop-blur-sm rounded-2xl p-3 shadow-xl">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Recent Activity</h2>

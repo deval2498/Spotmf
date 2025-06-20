@@ -2,7 +2,7 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 
 export default function TokenBalanceCard() {
   return (
-    <div className="bg-gradient-to-br from-slate-600/20 via-slate-500/20 to-slate-700/20 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-3 mt-3 shadow-xl">
+    <div className="bg-gradient-to-br from-slate-600/28 to-slate-700/28 backdrop-blur-sm rounded-2xl p-3 mt-3 shadow-xl">
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-slate-200 font-semibold">Token Balance</h3>

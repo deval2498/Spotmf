@@ -201,7 +201,7 @@ const ChartComponent = () => {
   }, [isSymbolDropdownOpen]);
 
   return (
-    <div className="bg-gradient-to-br from-slate-600/20 via-slate-500/20 to-slate-700/20 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-4 shadow-xl">
+    <div className="bg-gradient-to-br from-slate-600/20 via-slate-500/20 to-slate-700/20 backdrop-blur-sm  rounded-2xl p-4 shadow-xl">
       {/* Header Section */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
@@ -247,7 +247,7 @@ const ChartComponent = () => {
           <div className="relative symbol-dropdown">
             <button
               onClick={() => setIsSymbolDropdownOpen(!isSymbolDropdownOpen)}
-              className="flex items-center gap-2 bg-slate-700/30 hover:bg-slate-600/40 border border-slate-600/50 px-3 py-2 rounded-xl transition-all duration-200 group"
+              className="flex items-center gap-2  hover:bg-slate-600/40  px-3 py-2 rounded-xl transition-all duration-200 group"
             >
               <div
                 className="w-4 h-4 rounded-full flex items-center justify-center text-white text-xs font-bold"
@@ -268,7 +268,7 @@ const ChartComponent = () => {
 
             {/* Dropdown Menu */}
             {isSymbolDropdownOpen && (
-              <div className="absolute top-full mt-2 right-0 bg-slate-800/95 backdrop-blur-sm border border-slate-600/50 rounded-xl shadow-xl z-20 min-w-[180px] max-h-64 overflow-y-auto">
+              <div className="absolute top-full mt-1 right-0 bg-black/80 backdrop-blur-sm rounded-xl shadow-xl z-20 min-w-[180px] max-h-64 overflow-y-auto">
                 {symbols.map((symbol) => (
                   <button
                     key={symbol.key}
@@ -277,7 +277,7 @@ const ChartComponent = () => {
                       setIsSymbolDropdownOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 transition-colors first:rounded-t-xl last:rounded-b-xl ${
-                      selectedSymbol === symbol.key ? "bg-slate-700/30" : ""
+                      selectedSymbol === symbol.key ? "bg-gray-800/50" : ""
                     }`}
                   >
                     <div
@@ -302,12 +302,12 @@ const ChartComponent = () => {
           </div>
 
           {/* Resolution Buttons */}
-          <div className="flex bg-slate-700/30 rounded-xl p-1 gap-1">
+          <div className="flex rounded-xl p-1 gap-1">
             {resolutions.map((resolution) => (
               <button
                 key={resolution.key}
                 onClick={() => setSelectedResolution(resolution.key)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`p-2 rounded-xl text-xs font-medium transition-all duration-200 ${
                   selectedResolution === resolution.key
                     ? "bg-slate-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-600/50"
