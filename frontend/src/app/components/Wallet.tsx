@@ -67,7 +67,9 @@ export default function Wallet({ className }: WalletProps) {
 
   useEffect(() => {
     console.log("How many times was this called");
-    if (data && !isLoading && !error) {
+    const jwt = window.localStorage.getItem("jwt");
+    console.log(!jwt, "condition");
+    if (data && !isLoading && !error && !jwt) {
       setShowModal(true);
       setMessage(data.message);
     }

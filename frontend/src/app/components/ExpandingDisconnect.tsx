@@ -9,6 +9,7 @@ export const ExpandingDisconnectButton = ({ disconnect }) => {
       // If already expanded, disconnect
       disconnect();
       setIsExpanded(false); // Close after disconnect
+      window.localStorage.removeItem("jwt");
     } else {
       // If collapsed, expand first
       setIsExpanded(true);
