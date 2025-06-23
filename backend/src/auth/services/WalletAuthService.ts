@@ -25,12 +25,12 @@ export class WalletAuthService {
             where: { walletAddress: normalizedAddress },
             update: {
               nonce,
-              expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 5 minutes from now
             },
             create: {
               walletAddress: normalizedAddress,
               nonce,
-              expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000)
             }
           })
           return { message }
@@ -49,16 +49,16 @@ export class WalletAuthService {
         }
         const message = this.cryptoService.createAuthMessage(nonceData.nonce)
         const unprefixedHex = getUnprefixedHex(signature)
-        const recoverWalletAddress = this.cryptoService.getWalletAddressFromSignature(message, `0x${unprefixedHex}`)
+        const recoverWalletAddress = await this.cryptoService.getWalletAddressFromSignature(message, `0x${unprefixedHex}`)
         if((await recoverWalletAddress).toLowerCase() != nonceData.walletAddress) {
             throw new AuthException('Invalid address, use the correct wallet to sign from')
         }
+        const jwt = this.cryptoService.generateJWT({ walletAddress: normalizedWalletAddress}, '30d')
         await this.prisma.authNonces.delete({
             where: {
                 walletAddress: normalizedWalletAddress
             }
         })
-        const jwt = this.cryptoService.generateJWT({ walletAddress: normalizedWalletAddress}, '30d')
         return {
             jwt
         }

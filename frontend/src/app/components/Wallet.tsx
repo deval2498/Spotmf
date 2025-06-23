@@ -1,7 +1,7 @@
 "use client";
 import { useAccount, useChainId, useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WalletOptions } from "@/providers/wallet-options";
 import { formatWalletAddress } from "@/lib/utils";
 import { RiShutDownLine } from "react-icons/ri";
@@ -9,6 +9,9 @@ import Image from "next/image";
 import { getWalletIconByName } from "@/lib/utils";
 import { ExpandingDisconnectButton } from "./ExpandingDisconnect";
 import { useBalance } from "wagmi";
+import { useApi, useAuthApi, usePublicApi } from "@/hooks/useApi";
+import { createPortal } from "react-dom";
+import { Card } from "./Card";
 
 // USDT contract addresses for different chains
 const USDT_ADDRESSES = {
@@ -25,17 +28,19 @@ interface WalletProps {
   className?: string;
 }
 
+interface ChallengeRequest {
+  walletAddress: string;
+}
+
 export default function Wallet({ className }: WalletProps) {
   const { address, isConnected, connector } = useAccount();
-  const [openDropdown, setOpenDropdown] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [shouldFetch, setShouldFetch] = useState<boolean>(false);
+  const [requestBody, setRequestBody] = useState<ChallengeRequest | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const { disconnect } = useDisconnect();
-  const chainId = useChainId();
-  const { connectors, connect } = useConnect();
-  const {
-    data: usdtBalance,
-    isLoading: isUsdtLoading,
-    error,
-  } = useBalance({
+  const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
     address: address,
     token: USDT_ADDRESSES[999] as `0x${string}`,
     chainId: 999,
@@ -46,35 +51,72 @@ export default function Wallet({ className }: WalletProps) {
     if (value < 0.01) return "< 0.01";
     return value.toFixed(2);
   };
+  const {
+    data,
+    loading: isLoading,
+    error,
+  } = useApi(shouldFetch ? "/auth/challenge" : "", "post", requestBody);
+  useEffect(() => {
+    console.log("How many times was this called should fetch");
+    if (isConnected && address) {
+      setShouldFetch(true);
+      setRequestBody({ walletAddress: address });
+    }
+    return () => setShouldFetch(false);
+  }, [isConnected, address]);
 
+  useEffect(() => {
+    console.log("How many times was this called");
+    if (data && !isLoading && !error) {
+      setShowModal(true);
+      setMessage(data.message);
+    }
+  }, [data, isLoading, error]);
+
+  console.log(
+    data,
+    showModal,
+    isConnected,
+    address,
+    shouldFetch,
+    "data inside wallet"
+  );
   if (isConnected) {
-    console.log(usdtBalance, chainId, isUsdtLoading, error, "checking");
     return (
-      <div className="text-white flex gap-2 items-center">
-        {isUsdtLoading ? (
-          <div className="text-white">Loading...</div>
-        ) : (
-          usdtBalance && (
-            <div className="flex items-center text-sm gap-2 text-gray-400">
-              <Image src="/usdt0.svg" height={20} width={20} alt="" />
-              <div className="flex flex-col gap-0">
-                <div className="text-white">USDT0</div>
-                <div>{formatUsdtBalance(usdtBalance)}</div>
+      <>
+        <div className="text-white flex gap-2 items-center">
+          {isUsdtLoading ? (
+            <div className="text-white">Loading...</div>
+          ) : (
+            usdtBalance && (
+              <div className="flex items-center text-sm gap-2 text-gray-400">
+                <Image src="/usdt0.svg" height={20} width={20} alt="" />
+                <div className="flex flex-col gap-0">
+                  <div className="text-white">USDT0</div>
+                  <div>{formatUsdtBalance(usdtBalance)}</div>
+                </div>
               </div>
-            </div>
-          )
-        )}
-        <div className="bg-gray-800/70 rounded-2xl p-2 flex gap-2 items-center">
-          <Image
-            src={connector?.icon || getWalletIconByName(connector?.name)}
-            width={15}
-            height={15}
-            alt=""
-          />
-          <div className="text-sm">{formatWalletAddress(address)}</div>
+            )
+          )}
+          <div className="bg-gray-800/70 rounded-2xl p-2 flex gap-2 items-center">
+            <Image
+              src={connector?.icon || getWalletIconByName(connector?.name)}
+              width={15}
+              height={15}
+              alt=""
+            />
+            <div className="text-sm">{formatWalletAddress(address)}</div>
+          </div>
+          <ExpandingDisconnectButton disconnect={disconnect} />
         </div>
-        <ExpandingDisconnectButton disconnect={disconnect} />
-      </div>
+
+        {/* Modal rendered outside DOM tree */}
+        {showModal &&
+          createPortal(
+            <Card setShowModal={setShowModal} message={message} />,
+            document.body
+          )}
+      </>
     );
   }
 

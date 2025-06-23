@@ -32,9 +32,7 @@ export function OverviewCard() {
           platform
         </div>
       </div>
-      <div className="flex-1/3">
-        <ChartComponent />
-      </div>
+      <div className="flex-1/3">{/* <ChartComponent /> */}</div>
     </div>
   );
 }
