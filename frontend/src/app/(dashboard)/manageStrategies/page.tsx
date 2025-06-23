@@ -1,0 +1,683 @@
+"use client";
+import React, { useState } from "react";
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  TrendingUp,
+  Target,
+  Calendar,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  X,
+  BarChart3,
+  DollarSign,
+  Clock,
+} from "lucide-react";
+
+const ManageStrategies = () => {
+  const [view, setView] = useState("list"); // 'list', 'create', 'edit'
+  const [currentStep, setCurrentStep] = useState(0);
+  const [editingStrategy, setEditingStrategy] = useState(null);
+  const [strategies, setStrategies] = useState([
+    {
+      id: 1,
+      name: "Growth Portfolio",
+      type: "Long-term Investment",
+      status: "Active",
+      performance: "+12.4%",
+      allocation: "70% Stocks, 20% Bonds, 10% Cash",
+      createdDate: "2024-01-15",
+      lastModified: "2024-06-20",
+    },
+    {
+      id: 2,
+      name: "Conservative Income",
+      type: "Income Generation",
+      status: "Active",
+      performance: "+6.8%",
+      allocation: "40% Bonds, 30% Dividend Stocks, 30% REITs",
+      createdDate: "2024-02-10",
+      lastModified: "2024-06-18",
+    },
+    {
+      id: 3,
+      name: "Tech Momentum",
+      type: "Sector Focus",
+      status: "Paused",
+      performance: "-2.1%",
+      allocation: "90% Tech Stocks, 10% Cash",
+      createdDate: "2024-03-05",
+      lastModified: "2024-06-15",
+    },
+  ]);
+
+  const [newStrategy, setNewStrategy] = useState({
+    name: "",
+    type: "",
+    riskLevel: "",
+    timeHorizon: "",
+    initialAmount: "",
+    allocation: {
+      stocks: 0,
+      bonds: 0,
+      cash: 0,
+      crypto: 0,
+    },
+    rebalancing: "quarterly",
+  });
+
+  const createSteps = [
+    { title: "Basic Info", icon: Target },
+    { title: "Risk & Timeline", icon: TrendingUp },
+    { title: "Asset Allocation", icon: BarChart3 },
+    { title: "Settings", icon: Calendar },
+    { title: "Review", icon: Check },
+  ];
+
+  const handleNext = () => {
+    if (currentStep < createSteps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleCreate = () => {
+    setView("create");
+    setCurrentStep(0);
+    setNewStrategy({
+      name: "",
+      type: "",
+      riskLevel: "",
+      timeHorizon: "",
+      initialAmount: "",
+      allocation: { stocks: 0, bonds: 0, cash: 0, crypto: 0 },
+      rebalancing: "quarterly",
+    });
+  };
+
+  const handleEdit = (strategy) => {
+    setEditingStrategy(strategy);
+    setView("edit");
+  };
+
+  const handleDelete = (id) => {
+    setStrategies(strategies.filter((s) => s.id !== id));
+  };
+
+  const renderCreateStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-medium text-zinc-100">
+              Strategy Basics
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Strategy Name
+                </label>
+                <input
+                  type="text"
+                  value={newStrategy.name}
+                  onChange={(e) =>
+                    setNewStrategy({ ...newStrategy, name: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                  placeholder="Enter strategy name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Strategy Type
+                </label>
+                <select
+                  value={newStrategy.type}
+                  onChange={(e) =>
+                    setNewStrategy({ ...newStrategy, type: e.target.value })
+                  }
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                >
+                  <option value="">Select type</option>
+                  <option value="growth">Growth</option>
+                  <option value="income">Income</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+      case 1:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-medium text-zinc-100">
+              Risk & Timeline
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Risk Level
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["Low", "Medium", "High"].map((risk) => (
+                    <button
+                      key={risk}
+                      onClick={() =>
+                        setNewStrategy({
+                          ...newStrategy,
+                          riskLevel: risk.toLowerCase(),
+                        })
+                      }
+                      className={`p-3 rounded-lg border transition-all ${
+                        newStrategy.riskLevel === risk.toLowerCase()
+                          ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-[#ff6b6b]"
+                          : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600"
+                      }`}
+                    >
+                      {risk}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Time Horizon
+                </label>
+                <select
+                  value={newStrategy.timeHorizon}
+                  onChange={(e) =>
+                    setNewStrategy({
+                      ...newStrategy,
+                      timeHorizon: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                >
+                  <option value="">Select timeline</option>
+                  <option value="short">Short-term (1-3 years)</option>
+                  <option value="medium">Medium-term (3-7 years)</option>
+                  <option value="long">Long-term (7+ years)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-medium text-zinc-100">
+              Asset Allocation
+            </h3>
+            <div className="space-y-4">
+              {Object.entries(newStrategy.allocation).map(([asset, value]) => (
+                <div key={asset}>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2 capitalize">
+                    {asset} ({value}%)
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={value}
+                    onChange={(e) =>
+                      setNewStrategy({
+                        ...newStrategy,
+                        allocation: {
+                          ...newStrategy.allocation,
+                          [asset]: parseInt(e.target.value),
+                        },
+                      })
+                    }
+                    className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #ff6b6b 0%, #ff6b6b ${value}%, #52525b ${value}%, #52525b 100%)`,
+                    }}
+                  />
+                </div>
+              ))}
+              <div className="text-sm text-zinc-400">
+                Total:{" "}
+                {Object.values(newStrategy.allocation).reduce(
+                  (a, b) => a + b,
+                  0
+                )}
+                %
+              </div>
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-medium text-zinc-100">
+              Strategy Settings
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Initial Investment
+                </label>
+                <input
+                  type="number"
+                  value={newStrategy.initialAmount}
+                  onChange={(e) =>
+                    setNewStrategy({
+                      ...newStrategy,
+                      initialAmount: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                  placeholder="10000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Rebalancing Frequency
+                </label>
+                <select
+                  value={newStrategy.rebalancing}
+                  onChange={(e) =>
+                    setNewStrategy({
+                      ...newStrategy,
+                      rebalancing: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                >
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="annually">Annually</option>
+                  <option value="manual">Manual Only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-xl font-medium text-zinc-100">
+              Review Strategy
+            </h3>
+            <div className="bg-zinc-800/50 rounded-lg p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-zinc-400">Name:</span>{" "}
+                  <span className="text-zinc-100">{newStrategy.name}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Type:</span>{" "}
+                  <span className="text-zinc-100">{newStrategy.type}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Risk:</span>{" "}
+                  <span className="text-zinc-100">{newStrategy.riskLevel}</span>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Timeline:</span>{" "}
+                  <span className="text-zinc-100">
+                    {newStrategy.timeHorizon}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <span className="text-zinc-400 text-sm">Allocation:</span>
+                <div className="mt-2 space-y-1">
+                  {Object.entries(newStrategy.allocation).map(
+                    ([asset, value]) =>
+                      value > 0 && (
+                        <div
+                          key={asset}
+                          className="text-sm text-zinc-100 capitalize"
+                        >
+                          {asset}: {value}%
+                        </div>
+                      )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  if (view === "create") {
+    return (
+      <div className="h-full text-white">
+        {/* Header */}
+        <div className="border-b border-zinc-800 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-zinc-100">
+                Create New Strategy
+              </h1>
+              <p className="text-zinc-400 mt-1">
+                Step {currentStep + 1} of {createSteps.length}
+              </p>
+            </div>
+            <button
+              onClick={() => setView("list")}
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-zinc-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="p-6 border-b border-zinc-800">
+          <div className="flex items-center space-x-4">
+            {createSteps.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep;
+
+              return (
+                <div key={index} className="flex items-center">
+                  <div
+                    className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
+                      isActive
+                        ? "border-[#ff6b6b] bg-[#ff6b6b] text-white"
+                        : isCompleted
+                        ? "border-[#f6339a] bg-[#f6339a] text-white"
+                        : "border-zinc-600 bg-zinc-800 text-zinc-400"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span
+                    className={`ml-2 text-sm ${
+                      isActive
+                        ? "text-[#ff6b6b]"
+                        : isCompleted
+                        ? "text-[#f6339a]"
+                        : "text-zinc-400"
+                    }`}
+                  >
+                    {step.title}
+                  </span>
+                  {index < createSteps.length - 1 && (
+                    <ArrowRight className="w-4 h-4 text-zinc-600 ml-4" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 flex-1">
+          <div className="max-w-2xl">{renderCreateStep()}</div>
+        </div>
+
+        {/* Navigation */}
+        <div className="border-t border-zinc-800 p-6">
+          <div className="flex justify-between">
+            <button
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className="px-4 py-2 text-zinc-400 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={
+                currentStep === createSteps.length - 1
+                  ? () => setView("list")
+                  : handleNext
+              }
+              className="px-6 py-2 bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              {currentStep === createSteps.length - 1
+                ? "Create Strategy"
+                : "Next"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "edit") {
+    return (
+      <div className="h-full text-white p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-zinc-100">
+            Edit Strategy
+          </h1>
+          <button
+            onClick={() => setView("list")}
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-zinc-400" />
+          </button>
+        </div>
+
+        <div className="max-w-4xl">
+          <div className="bg-zinc-800/50 rounded-xl p-6">
+            <h2 className="text-xl font-medium text-zinc-100 mb-6">
+              {editingStrategy?.name}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Strategy Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={editingStrategy?.name}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Status
+                  </label>
+                  <select className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors">
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Strategy Type
+                  </label>
+                  <select className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors">
+                    <option value="growth">Growth</option>
+                    <option value="income">Income</option>
+                    <option value="balanced">Balanced</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Allocation
+                  </label>
+                  <textarea
+                    defaultValue={editingStrategy?.allocation}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors h-24 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Performance
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={editingStrategy?.performance}
+                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 mt-8">
+              <button
+                onClick={() => setView("list")}
+                className="px-6 py-2 text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button className="px-6 py-2 bg-[#f6339a] hover:bg-[#f6339a]/90 text-white rounded-lg transition-colors">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full text-white">
+      {/* Header */}
+      <div className="border-b border-zinc-800 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-100">
+              Manage Strategies
+            </h1>
+            <p className="text-zinc-400 mt-1">
+              Create, edit, and monitor your investment strategies
+            </p>
+          </div>
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white rounded-lg transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Strategy
+          </button>
+        </div>
+      </div>
+
+      {/* Strategy List */}
+      <div className="p-6">
+        <div className="grid gap-4">
+          {strategies.map((strategy) => (
+            <div
+              key={strategy.id}
+              className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700/50 hover:border-zinc-600/50 transition-all"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-medium text-zinc-100">
+                      {strategy.name}
+                    </h3>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        strategy.status === "Active"
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                      }`}
+                    >
+                      {strategy.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm text-zinc-400">Type:</span>
+                      <span className="text-sm text-zinc-100">
+                        {strategy.type}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm text-zinc-400">
+                        Performance:
+                      </span>
+                      <span
+                        className={`text-sm font-medium ${
+                          strategy.performance.startsWith("+")
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {strategy.performance}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm text-zinc-400">Modified:</span>
+                      <span className="text-sm text-zinc-100">
+                        {strategy.lastModified}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <span className="text-sm text-zinc-400">Allocation: </span>
+                    <span className="text-sm text-zinc-100">
+                      {strategy.allocation}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={() => handleEdit(strategy)}
+                    className="p-2 hover:bg-zinc-700 rounded-lg transition-colors group"
+                    title="Edit Strategy"
+                  >
+                    <Edit3 className="w-4 h-4 text-zinc-400 group-hover:text-[#f6339a]" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(strategy.id)}
+                    className="p-2 hover:bg-zinc-700 rounded-lg transition-colors group"
+                    title="Delete Strategy"
+                  >
+                    <Trash2 className="w-4 h-4 text-zinc-400 group-hover:text-red-400" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {strategies.length === 0 && (
+          <div className="text-center py-12">
+            <Target className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-zinc-300 mb-2">
+              No strategies yet
+            </h3>
+            <p className="text-zinc-500 mb-6">
+              Create your first investment strategy to get started
+            </p>
+            <button
+              onClick={handleCreate}
+              className="px-6 py-3 bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Create Strategy
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ManageStrategies;

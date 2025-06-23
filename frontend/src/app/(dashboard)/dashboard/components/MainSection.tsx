@@ -5,11 +5,11 @@ import { LiaDollarSignSolid } from "react-icons/lia";
 import Image from "next/image";
 import { OverviewCard } from "./OverviewCard";
 import ActivityTable from "./DashboardActivityComponent";
-import Wallet from "../../components/Wallet";
+import Wallet from "../../../components/Wallet";
 
 export function MainSection() {
   return (
-    <div className=" w-full rounded-2xl p-6 flex flex-col gap-4 overflow-y-scroll">
+    <div className="w-full rounded-2xl p-6 flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <div className="flex gap-2 text-xs text-gray-400">
           <div className="flex gap-1 items-center">

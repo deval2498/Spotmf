@@ -1,7 +1,14 @@
+"use client";
 import { HiMiniHome } from "react-icons/hi2";
 import { GrTransaction } from "react-icons/gr";
 import { GiTwoCoins } from "react-icons/gi";
+import { GiTakeMyMoney } from "react-icons/gi";
+import { useRouter } from "next/navigation";
 export function LeftSidebar() {
+  const router = useRouter();
+  const handleRoute = (route: string) => {
+    router.push(`/${route}`);
+  };
   return (
     <div className="min-w-70 max-w-70 bg-gradient-to-br from-slate-600/30 via-slate-500/20 to-slate-700/40 backdrop-blur-sm rounded-2xl overflow-scroll min-h-full">
       <div className="flex flex-col py-6 px-8 gap-2">
@@ -22,6 +29,13 @@ export function LeftSidebar() {
             <GiTwoCoins />
             <div>Balances and Funds</div>
           </div>
+          <button
+            className="p-2 hover:bg-gray-700 rounded-xl flex items-center gap-4 hover:cursor-pointer"
+            onClick={() => handleRoute("manageStrategies")}
+          >
+            <GiTakeMyMoney />
+            <span>Manage strategies</span>
+          </button>
         </div>
       </div>
     </div>
