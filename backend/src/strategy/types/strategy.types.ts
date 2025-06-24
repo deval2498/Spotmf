@@ -18,6 +18,7 @@ export interface CreateUserStrategyRequest {
     acceptedSlippage: string;
     asset: string;
     intervalDays: string;
+    signedRawTx: string;
 }
 
 export interface DeleteUserStrategyRequest {

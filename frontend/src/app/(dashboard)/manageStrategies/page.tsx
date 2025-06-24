@@ -69,11 +69,9 @@ const ManageStrategies = () => {
   });
 
   const createSteps = [
-    { title: "Basic Info", icon: Target },
-    { title: "Risk & Timeline", icon: TrendingUp },
-    { title: "Asset Allocation", icon: BarChart3 },
-    { title: "Settings", icon: Calendar },
-    { title: "Review", icon: Check },
+    { title: "Setup strategy", icon: Target },
+    { title: "Setup timelines and amounts", icon: TrendingUp },
+    { title: "Review and Sign", icon: Check },
   ];
 
   const handleNext = () => {
@@ -120,37 +118,132 @@ const ManageStrategies = () => {
               Strategy Basics
             </h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Strategy Name
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-zinc-300">
+                  Select Asset Type
                 </label>
-                <input
-                  type="text"
-                  value={newStrategy.name}
-                  onChange={(e) =>
-                    setNewStrategy({ ...newStrategy, name: e.target.value })
-                  }
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                  placeholder="Enter strategy name"
-                />
+
+                <div className="flex gap-2">
+                  {[
+                    {
+                      value: "Bitcoin",
+                      symbol: "BTC",
+                      icon: "₿",
+                    },
+                    {
+                      value: "Ethereum",
+                      symbol: "ETH",
+                      icon: "Ξ",
+                    },
+                    {
+                      value: "Hype",
+                      symbol: "HYPE",
+                      icon: "🚀",
+                    },
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className={`
+          flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm
+          ${
+            newStrategy.assetType === option.value
+              ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-zinc-100"
+              : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+          }
+        `}
+                    >
+                      <input
+                        type="radio"
+                        name="assetType"
+                        value={option.value}
+                        checked={newStrategy.assetType === option.value}
+                        onChange={(e) =>
+                          setNewStrategy({
+                            ...newStrategy,
+                            assetType: e.target.value,
+                          })
+                        }
+                        className="sr-only"
+                      />
+                      <span className="text-xs">{option.icon}</span>
+                      <span className="font-medium">{option.symbol}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Strategy Type
-                </label>
-                <select
-                  value={newStrategy.type}
-                  onChange={(e) =>
-                    setNewStrategy({ ...newStrategy, type: e.target.value })
-                  }
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                >
-                  <option value="">Select type</option>
-                  <option value="growth">Growth</option>
-                  <option value="income">Income</option>
-                  <option value="balanced">Balanced</option>
-                  <option value="aggressive">Aggressive</option>
-                </select>
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-zinc-300">
+                    Select Strategy Type
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      {
+                        value: "200DMA",
+                        label: "200DMA",
+                        description: "Focus on market dips for more returns",
+                        icon: "💰",
+                      },
+                      {
+                        value: "Simple",
+                        label: "Simple",
+                        description: "Regular SIP plan",
+                        icon: "📈",
+                      },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className={`
+                              relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02]
+                              ${
+                                newStrategy.type === option.value
+                                  ? "border-[#ff6b6b] bg-gradient-to-br from-[#ff6b6b]/10 to-[#ff6b6b]/5 shadow-lg shadow-[#ff6b6b]/20"
+                                  : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600 hover:bg-zinc-800/70"
+                              }
+                          `}
+                      >
+                        <input
+                          type="radio"
+                          name="strategyType"
+                          value={option.value}
+                          checked={newStrategy.type === option.value}
+                          onChange={(e) =>
+                            setNewStrategy({
+                              ...newStrategy,
+                              type: e.target.value,
+                            })
+                          }
+                          className="sr-only"
+                        />
+
+                        {/* Selection indicator */}
+                        <div
+                          className={`
+                            absolute top-3 right-3 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                            ${
+                              newStrategy.type === option.value
+                                ? "border-[#ff6b6b] bg-[#ff6b6b]"
+                                : "border-zinc-600"
+                            }
+                          `}
+                        >
+                          {newStrategy.type === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+
+                        <div className="text-2xl mb-2">{option.icon}</div>
+                        <div className="font-semibold text-zinc-100 mb-1">
+                          {option.label}
+                        </div>
+                        <div className="text-xs text-zinc-400">
+                          {option.description}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -159,54 +252,156 @@ const ManageStrategies = () => {
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-medium text-zinc-100">
-              Risk & Timeline
+              Investment Schedule
             </h3>
+
             <div className="space-y-4">
+              {/* Interval Days */}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Risk Level
+                  Investment interval
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {["Low", "Medium", "High"].map((risk) => (
+                <div className="flex gap-2">
+                  {[
+                    { value: 7, label: "Weekly" },
+                    { value: 14, label: "Bi-weekly" },
+                    { value: 30, label: "Monthly" },
+                  ].map((option) => (
                     <button
-                      key={risk}
+                      key={option.value}
                       onClick={() =>
                         setNewStrategy({
                           ...newStrategy,
-                          riskLevel: risk.toLowerCase(),
+                          intervalDays: option.value,
                         })
                       }
-                      className={`p-3 rounded-lg border transition-all ${
-                        newStrategy.riskLevel === risk.toLowerCase()
+                      className={`px-3 py-2 rounded-lg border transition-all text-sm flex-1 ${
+                        newStrategy.intervalDays === option.value
                           ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-[#ff6b6b]"
                           : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600"
                       }`}
                     >
-                      {risk}
+                      {option.label}
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Days"
+                      value={newStrategy.intervalDays || ""}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, "");
+                        setNewStrategy({
+                          ...newStrategy,
+                          intervalDays: value ? parseInt(value) : "",
+                        });
+                      }}
+                      className="w-16 px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm text-center focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Amount per Interval */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Amount per interval
+                </label>
+                <div className="flex gap-2 mb-2">
+                  {[50, 100, 250, 500].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() =>
+                        setNewStrategy({
+                          ...newStrategy,
+                          amountPerInterval: amount,
+                        })
+                      }
+                      className={`px-3 py-2 rounded-lg border transition-all text-sm flex-1 ${
+                        newStrategy.amountPerInterval === amount
+                          ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-[#ff6b6b]"
+                          : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600"
+                      }`}
+                    >
+                      ${amount}
                     </button>
                   ))}
                 </div>
+                <div className="relative w-32">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 text-sm">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={newStrategy.amountPerInterval || ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.]/g, "");
+                      setNewStrategy({
+                        ...newStrategy,
+                        amountPerInterval: value ? parseFloat(value) : "",
+                      });
+                    }}
+                    className="w-full pl-6 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
+
+              {/* Total Budget */}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Time Horizon
+                  Total budget
+                  <span className="text-zinc-500 font-normal text-xs"> </span>
                 </label>
-                <select
-                  value={newStrategy.timeHorizon}
-                  onChange={(e) =>
-                    setNewStrategy({
-                      ...newStrategy,
-                      timeHorizon: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                >
-                  <option value="">Select timeline</option>
-                  <option value="short">Short-term (1-3 years)</option>
-                  <option value="medium">Medium-term (3-7 years)</option>
-                  <option value="long">Long-term (7+ years)</option>
-                </select>
+                <div className="relative w-40">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 text-sm">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={newStrategy.totalBudget || ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.]/g, "");
+                      setNewStrategy({
+                        ...newStrategy,
+                        totalBudget: value ? parseFloat(value) : "",
+                      });
+                    }}
+                    className="w-full pl-6 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Amount for which you will sign the transaction
+                </p>
               </div>
+
+              {/* Summary */}
+              {newStrategy.amountPerInterval && newStrategy.intervalDays && (
+                <div className="p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+                  <p className="text-sm text-zinc-300">
+                    <span className="font-medium">Summary:</span> Investing $
+                    {newStrategy.amountPerInterval} every{" "}
+                    {newStrategy.intervalDays} day
+                    {newStrategy.intervalDays !== 1 ? "s" : ""}
+                    {newStrategy.totalBudget && (
+                      <>
+                        {" "}
+                        for{" "}
+                        {Math.floor(
+                          newStrategy.totalBudget /
+                            newStrategy.amountPerInterval
+                        )}{" "}
+                        intervals
+                      </>
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -214,122 +409,31 @@ const ManageStrategies = () => {
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-medium text-zinc-100">
-              Asset Allocation
-            </h3>
-            <div className="space-y-4">
-              {Object.entries(newStrategy.allocation).map(([asset, value]) => (
-                <div key={asset}>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2 capitalize">
-                    {asset} ({value}%)
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={value}
-                    onChange={(e) =>
-                      setNewStrategy({
-                        ...newStrategy,
-                        allocation: {
-                          ...newStrategy.allocation,
-                          [asset]: parseInt(e.target.value),
-                        },
-                      })
-                    }
-                    className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #ff6b6b 0%, #ff6b6b ${value}%, #52525b ${value}%, #52525b 100%)`,
-                    }}
-                  />
-                </div>
-              ))}
-              <div className="text-sm text-zinc-400">
-                Total:{" "}
-                {Object.values(newStrategy.allocation).reduce(
-                  (a, b) => a + b,
-                  0
-                )}
-                %
-              </div>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-medium text-zinc-100">
-              Strategy Settings
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Initial Investment
-                </label>
-                <input
-                  type="number"
-                  value={newStrategy.initialAmount}
-                  onChange={(e) =>
-                    setNewStrategy({
-                      ...newStrategy,
-                      initialAmount: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                  placeholder="10000"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Rebalancing Frequency
-                </label>
-                <select
-                  value={newStrategy.rebalancing}
-                  onChange={(e) =>
-                    setNewStrategy({
-                      ...newStrategy,
-                      rebalancing: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:border-[#ff6b6b] transition-colors"
-                >
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="annually">Annually</option>
-                  <option value="manual">Manual Only</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        );
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-medium text-zinc-100">
-              Review Strategy
+              Review and Sign
             </h3>
             <div className="bg-zinc-800/50 rounded-lg p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-zinc-400">Name:</span>{" "}
+                  <span className="text-zinc-400">Asset Type:</span>{" "}
                   <span className="text-zinc-100">{newStrategy.name}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-400">Type:</span>{" "}
+                  <span className="text-zinc-400">Strategy Type:</span>{" "}
                   <span className="text-zinc-100">{newStrategy.type}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-400">Risk:</span>{" "}
+                  <span className="text-zinc-400">Interval Days:</span>{" "}
                   <span className="text-zinc-100">{newStrategy.riskLevel}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-400">Timeline:</span>{" "}
+                  <span className="text-zinc-400">Amount:</span>{" "}
                   <span className="text-zinc-100">
                     {newStrategy.timeHorizon}
                   </span>
                 </div>
               </div>
               <div>
-                <span className="text-zinc-400 text-sm">Allocation:</span>
+                <span className="text-zinc-400 text-sm">Total Amount:</span>
                 <div className="mt-2 space-y-1">
                   {Object.entries(newStrategy.allocation).map(
                     ([asset, value]) =>

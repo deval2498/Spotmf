@@ -82,10 +82,11 @@ model User_Strategy {
   strategyId       String
   strategy         Strategy   @relation(fields: [strategyId], references: [id])
   asset            ASSET_TYPE
+  signedRawTxnHash String
   intervalAmount   BigInt     @map("interval_amount")
   intervalDays     Decimal    @map("interval_days")
   acceptedSlippage Decimal    @default(1.0) @map("accepted_slippage") // 1% default
-  isActive         Boolean    @default(true)
+  isActive         Boolean    @default(false)
   createdAt        DateTime   @default(now()) @map("created_at")
   lastExecutedAt   DateTime?  @map("last_executed_at")
   User             User       @relation(fields: [walletAddress], references: [walletAddress])
