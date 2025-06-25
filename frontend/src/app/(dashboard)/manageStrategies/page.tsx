@@ -15,11 +15,13 @@ import {
   DollarSign,
   Clock,
 } from "lucide-react";
+import StrategyModal from "./components/StrategyModal";
 
 const ManageStrategies = () => {
   const [view, setView] = useState("list"); // 'list', 'create', 'edit'
   const [currentStep, setCurrentStep] = useState(0);
   const [editingStrategy, setEditingStrategy] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [strategies, setStrategies] = useState([
     {
       id: 1,
@@ -80,6 +82,10 @@ const ManageStrategies = () => {
     }
   };
 
+  const handleCreateStrategy = () => {
+    setIsModalOpen(true);
+  };
+
   const handlePrev = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -107,6 +113,12 @@ const ManageStrategies = () => {
 
   const handleDelete = (id) => {
     setStrategies(strategies.filter((s) => s.id !== id));
+  };
+
+  const handleStrategyComplete = () => {
+    // Handle what happens after strategy is created
+    console.log("Strategy created successfully!");
+    // You might want to redirect to strategy list or show success message
   };
 
   const renderCreateStep = () => {
@@ -539,7 +551,7 @@ const ManageStrategies = () => {
             <button
               onClick={
                 currentStep === createSteps.length - 1
-                  ? () => setView("list")
+                  ? handleCreateStrategy
                   : handleNext
               }
               className="px-6 py-2 bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white rounded-lg transition-colors flex items-center gap-2"
@@ -549,6 +561,11 @@ const ManageStrategies = () => {
                 : "Next"}
               <ArrowRight className="w-4 h-4" />
             </button>
+            <StrategyModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onComplete={handleStrategyComplete}
+            />
           </div>
         </div>
       </div>
