@@ -1,3 +1,10 @@
+const validActionTypes = new Set([
+        'CREATE_STRATEGY',
+        'UPDATE_STRATEGY',
+        'DELETE_STRATEGY'
+])
+
+
 export function ethereumWalletValidation(walletAddress: string): boolean {
     const regex = /^0x[0-9a-fA-F]{40}$/
     return regex.test(walletAddress)
@@ -14,4 +21,8 @@ export function getUnprefixedHex(prefixedHex: string): string {
 
 export function isValidNonce(nonce: string) : boolean {
     return /^0x[0-9a-fA-F]{64}$/.test(nonce)
+}
+
+export function actionTypeValidation(action: 'string'): boolean {
+    return validActionTypes.has(action)
 }

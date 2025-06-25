@@ -46,7 +46,7 @@ export function Card({
   // Handle API response
   useEffect(() => {
     if (apiData && !apiLoading && !apiError) {
-      window.localStorage.setItem("jwt", apiData.jwt);
+      window.localStorage.setItem("jwt", `Bearer ${apiData.jwt}`);
       // Handle successful API response
       setShowModal(false);
     }

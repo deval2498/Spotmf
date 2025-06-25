@@ -21,5 +21,22 @@ export class AuthController {
           next(error);
         }
       }
-    
+
+      async createActionNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+          const result = await this.authService.createActionNonce(req.body);
+          res.json(result);
+        } catch (error) {
+          next(error)
+        }
+      }
+
+      async verifyActionNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+          const result = await this.authService.verifyActionNonce(req.body);
+          res.json(result)
+        } catch (error) {
+          next(error)
+        }
+      }
 }

@@ -1,9 +1,10 @@
 // src/auth/routes/auth.routes.ts
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController.ts';
-import { validateChallengeRequest, validateVerifyRequest } from '../middleware/validator.ts';
+import { validateChallengeRequest, validateCreateActionRequest, validateJWT, validateVerifyRequest } from '../middleware/validator.ts';
+import { CryptoService } from '../../shared/service/CryptoService.ts';
 
-export const createAuthRoutes = (authController: AuthController): Router => {
+export const createAuthRoutes = (authController: AuthController, cryptoService: CryptoService): Router => {
   const router = Router();
 
   // POST /auth/challenge
@@ -19,6 +20,10 @@ export const createAuthRoutes = (authController: AuthController): Router => {
     validateVerifyRequest,
     authController.verifySignature.bind(authController)
   );
+
+  router.post('/create-action', validateCreateActionRequest, validateJWT, authController.createActionNonce.bind(authController));
+
+  router.post('/verify-action', validateVerifyActionRequest, validateJWT, authController.verifyActionNonce.bind(authController));
 
   return router;
 };
