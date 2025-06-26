@@ -16,7 +16,7 @@ export const createMainRouter = (): Router => {
   const authController = new AuthController(authService);
 
   // Register route modules
-  router.use('/auth', createAuthRoutes(authController, cryptoService));
+  router.use('/auth', createAuthRoutes(authController));
 
   return router;
 };

@@ -9,16 +9,9 @@ export interface GetUserStrategyRequest {
 }
 
 export interface CreateUserStrategyRequest {
+    signature: string;
+    actionId: string;
     walletAddress: string;
-    txReceipt: string;
-    contractAddress: string;
-    amount: string;
-    approvedAmount: BigInt;
-    strategyType: STRATEGY_TYPE;
-    acceptedSlippage: string;
-    asset: string;
-    intervalDays: string;
-    signedRawTx: string;
 }
 
 export interface DeleteUserStrategyRequest {

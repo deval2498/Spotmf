@@ -22,10 +22,6 @@
     "resolveJsonModule": true,
     "declaration": true,
     "sourceMap": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/auth/types"
-    ]
   },
   "include": [
     "src/**/*.ts"

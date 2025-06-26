@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// Cleaned Prisma Schema
 generator client {
   provider = "prisma-client-js"
-  //output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,38 +9,30 @@ datasource db {
 }
 
 model User {
-  id               String          @id @default(cuid())
-  walletAddress    String          @unique @map("wallet_address") @db.VarChar(42)
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @default(now()) @map("updated_at")
-  // profile fields
-  email            String?         @db.VarChar(255)
-  name             String?         @db.VarChar(100)
-  profileImage     String?
-  isActive         Boolean         @default(false)
-  funds            Funds[]
-  activeStrategies User_Strategy[]
+  id            String   @id @default(cuid())
+  walletAddress String   @unique @map("wallet_address") @db.VarChar(42)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Profile fields
+  email        String? @db.VarChar(255)
+  name         String? @db.VarChar(100)
+  profileImage String? @map("profile_image")
+  isActive     Boolean @default(true)
+
+  // Relations
+  actionNonces ActionNonce[]
+  strategies   UserStrategy[]
 
   @@index([walletAddress])
   @@map("users")
-}
-
-model Funds {
-  id              String  @id @default(cuid())
-  contractAddress String  @map("contract_address")
-  amount          BigInt  @default(0)
-  txReceipt       String  @map("tx_receipt")
-  contractName    String? @map("contract_name")
-  contractSymbol  String? @map("contract_symbol")
-  walletAddress   String
-  User            User    @relation(fields: [walletAddress], references: [walletAddress])
 }
 
 model AuthNonces {
   walletAddress String   @unique @map("wallet_address") @db.VarChar(42)
   nonce         String   @db.VarChar(64)
   expiresAt     DateTime @map("expires_at")
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([expiresAt])
   @@map("auth_nonces")
@@ -56,84 +42,147 @@ model ActionNonce {
   id            String    @id @default(cuid())
   walletAddress String    @map("wallet_address") @db.VarChar(42)
   nonce         String    @unique @db.VarChar(64)
-  action        String    @db.VarChar(100)
-  actionData    Json?     @map("action_data") // For storing action-specific data
+  action        String    @db.VarChar(100) // 'CREATE_STRATEGY', 'UPDATE_STRATEGY', etc.
+  actionData    Json      @map("action_data") // COMPLETE strategy configuration data
   expiresAt     DateTime  @map("expires_at")
   used          Boolean   @default(false)
   usedAt        DateTime? @map("used_at")
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  @@index([walletAddress, nonce, used]) // Better composite for main query
-  @@index([expiresAt, used]) // Better for cleanup
+  // Relations
+  user         User          @relation(fields: [walletAddress], references: [walletAddress], onDelete: Cascade)
+  userStrategy UserStrategy? // One action nonce can create one strategy
+
   @@index([walletAddress, used])
+  @@index([expiresAt, used])
   @@index([nonce])
-  @@index([expiresAt])
   @@map("action_nonces")
 }
 
-model Strategy {
-  id             String          @id @default(cuid())
-  type           STRATEGY_TYPE   @unique
-  userStrategies User_Strategy[]
-}
+model UserStrategy {
+  id            String @id @default(cuid())
+  walletAddress String @map("wallet_address") @db.VarChar(42)
+  actionNonceId String @unique @map("action_nonce_id") // Links back to the action nonce
 
-model User_Strategy {
-  id               String     @id @default(cuid())
-  strategyId       String
-  strategy         Strategy   @relation(fields: [strategyId], references: [id])
+  // ALL fields populated from ActionNonce.actionData
+  type             STRATEGY_TYPE
   asset            ASSET_TYPE
-  signedRawTxnHash String
-  intervalAmount   BigInt     @map("interval_amount")
-  intervalDays     Decimal    @map("interval_days")
-  acceptedSlippage Decimal    @default(1.0) @map("accepted_slippage") // 1% default
-  isActive         Boolean    @default(false)
-  createdAt        DateTime   @default(now()) @map("created_at")
-  lastExecutedAt   DateTime?  @map("last_executed_at")
-  User             User       @relation(fields: [walletAddress], references: [walletAddress])
-  walletAddress    String
+  intervalAmount   BigInt        @map("interval_amount") // Amount per interval in wei
+  intervalDays     Int           @map("interval_days") // Days between executions
+  acceptedSlippage Decimal       @default(1.0) @map("accepted_slippage") @db.Decimal(5, 2)
+  contractAddress  String?       @map("contract_address") // Token contract being approved
+  approvedAmount   BigInt?       @map("approved_amount") // Amount approved for spending
 
+  // Transaction data (added after signing)
+  signedRawTxnHash String? @map("signed_raw_txn_hash") // ERC20 approve transaction
+
+  // Status and tracking
+  status          STRATEGY_STATUS @default(PENDING)
+  isActive        Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  lastExecutedAt  DateTime?       @map("last_executed_at")
+  nextExecutionAt DateTime?       @map("next_execution_at")
+
+  // Execution tracking
+  totalExecutions    Int    @default(0) @map("total_executions")
+  totalAmountSwapped BigInt @default(0) @map("total_amount_swapped")
+
+  // Relations
+  user        User                @relation(fields: [walletAddress], references: [walletAddress], onDelete: Cascade)
+  actionNonce ActionNonce         @relation(fields: [actionNonceId], references: [id])
+  executions  StrategyExecution[]
+
+  @@index([walletAddress, isActive])
+  @@index([status, nextExecutionAt])
+  @@index([asset, type])
   @@map("user_strategies")
 }
 
-model PriceCache {
-  id        String   @id @default(cuid())
-  asset     String // 'UBTC', 'WBTC', 'WHYPE'
-  assetName String   @map("asset_name")
-  price     String   @db.VarChar(50) // Store as string to avoid precision issues
-  source    String   @db.VarChar(10) // 'DEX', 'API'
-  timestamp DateTime @default(now())
+model StrategyExecution {
+  id         String @id @default(cuid())
+  strategyId String @map("strategy_id")
+
+  // Execution details
+  executedAt      DateTime         @default(now()) @map("executed_at")
+  transactionHash String?          @map("transaction_hash") // Actual blockchain txn hash
+  status          EXECUTION_STATUS @default(PENDING)
+
+  // Trade details
+  amountIn       BigInt   @map("amount_in") // Amount of input token
+  amountOut      BigInt?  @map("amount_out") // Amount of output token received
+  actualSlippage Decimal? @map("actual_slippage") @db.Decimal(5, 2)
+  gasUsed        BigInt?  @map("gas_used")
+  gasPriceUsed   BigInt?  @map("gas_price_used")
+
+  // Error handling
+  errorMessage String? @map("error_message")
+  retryCount   Int     @default(0) @map("retry_count")
+
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  strategy UserStrategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([strategyId, executedAt])
+  @@index([status, executedAt])
+  @@index([transactionHash])
+  @@map("strategy_executions")
+}
+
+model PriceCache {
+  id        String     @id @default(cuid())
+  asset     ASSET_TYPE
+  price     String     @db.VarChar(50) // Store as string to avoid precision issues
+  source    String     @db.VarChar(20) // 'UNISWAP_V3', 'COINGECKO', etc.
+  timestamp DateTime   @default(now())
+  createdAt DateTime   @default(now()) @map("created_at")
 
   @@index([asset, timestamp])
   @@index([asset, source])
-  @@index([timestamp])
   @@map("price_cache")
 }
 
 model HistoricalPrice {
-  id        String   @id @default(cuid())
-  asset     String   @db.VarChar(10) // 'UBTC', 'WBTC', 'WHYPE'
-  assetName String   @map("asset_name")
-  date      DateTime
-  price     String   @db.VarChar(50) // Daily closing price
-  source    String   @default("DEX") @db.VarChar(10) // 'DEX', 'API'
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String     @id @default(cuid())
+  asset     ASSET_TYPE
+  date      DateTime   @db.Date // Only date, no time
+  price     String     @db.VarChar(50) // Daily closing price
+  source    String     @default("UNISWAP_V3") @db.VarChar(20)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
-  @@unique([asset, date], name: "asset_date") // One price per asset per day
+  @@unique([asset, date], name: "asset_date")
   @@index([asset])
-  @@index([asset, source])
   @@index([date])
   @@map("historical_prices")
 }
 
+// Enums
 enum STRATEGY_TYPE {
-  SIMPLE
-  DMA_200
+  DCA // Dollar Cost Averaging
+  DCA_WITH_DMA // DCA with 200-day moving average filter
 }
 
 enum ASSET_TYPE {
   BTC
   ETH
   HYPE
+}
+
+enum STRATEGY_STATUS {
+  PENDING // Waiting for transaction confirmation
+  ACTIVE // Running and executing
+  PAUSED // Temporarily stopped
+  COMPLETED // Finished (manual stop or limit reached)
+  FAILED // Failed to activate (transaction failed)
+}
+
+enum EXECUTION_STATUS {
+  PENDING // Scheduled but not executed
+  EXECUTING // Transaction sent to blockchain
+  SUCCESS // Successfully executed
+  FAILED // Failed execution
+  RETRYING // Failed but retrying
 }

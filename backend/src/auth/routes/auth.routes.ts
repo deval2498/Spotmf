@@ -1,10 +1,9 @@
 // src/auth/routes/auth.routes.ts
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController.ts';
-import { validateChallengeRequest, validateCreateActionRequest, validateJWT, validateVerifyRequest } from '../middleware/validator.ts';
-import { CryptoService } from '../../shared/service/CryptoService.ts';
+import { validateChallengeRequest, validateCreateActionRequest, validateJWT, validateVerifyActionRequest, validateVerifyRequest } from '../middleware/validator.ts';
 
-export const createAuthRoutes = (authController: AuthController, cryptoService: CryptoService): Router => {
+export const createAuthRoutes = (authController: AuthController): Router => {
   const router = Router();
 
   // POST /auth/challenge
