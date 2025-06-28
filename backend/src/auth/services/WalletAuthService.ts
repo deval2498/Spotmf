@@ -4,7 +4,7 @@ import { ChallengeRequest, ChallengeResponse, CreateActionNonceRequest, CreateAc
 import { CryptoService } from "../../shared/service/CryptoService.ts";
 import { getUnprefixedHex } from "../../shared/utils/Validations.ts";
 import { AuthException } from "../../shared/exceptions/Exceptions.ts";
-const strategyContractAddresses = {
+const strategyContractAddresses:Record<string, string> = {
     'BTC': '0x10c5ef2415Da27917C7E1Ce02E0364c3dEf56A4A'
 }
 export class WalletAuthService {
@@ -68,15 +68,20 @@ export class WalletAuthService {
         }
     }
 
-    async createActionNonce({ action, actionData, walletAddress }: CreateActionNonceRequest): Promise<CreateActionNonceResponse> {
+    async createActionNonce({ action, strategyType, asset, intervalAmount, intervalDays, acceptedSlippage, totalAmount, walletAddress }: CreateActionNonceRequest): Promise<CreateActionNonceResponse> {
         const normalizedAddress = walletAddress.toLowerCase();
         const nonce = this.cryptoService.generateActionNonce();
-        const actionMessage = this.cryptoService.createActionMessage(nonce, action, actionData);
+        const actionMessage = this.cryptoService.createActionMessage(nonce, action, strategyType, asset, intervalAmount.toString(), intervalDays, acceptedSlippage, totalAmount.toString());
         await this.prisma.actionNonce.create({
             data: {
                 walletAddress: normalizedAddress,
                 action,
-                actionData,
+                strategyType,
+                asset,
+                intervalDays,
+                intervalAmount: intervalAmount as bigint,
+                acceptedSlippage,
+                totalAmount: totalAmount as bigint,
                 expiresAt: new Date(Date.now() + 60 * 60 * 1000),
                 nonce
             }
@@ -87,28 +92,34 @@ export class WalletAuthService {
     }
 
     async verifyActionNonce( {message, signature, walletAddress}: VerifyActionRequest ): Promise<VerifyActionResponse> {
-        const normalizedAddress = walletAddress.toLowerCase();
+        try {
+            const normalizedAddress = walletAddress.toLowerCase();
         const parsedMessage = this.cryptoService.parseActionMessage(message);
         if(!parsedMessage) {
             throw new Error('Invalid message')
         }
-        const {action, actionData, nonce} = parsedMessage
+        const {nonce, action, strategyType, asset, intervalAmount, intervalDays, acceptedSlippage, totalAmount} = parsedMessage
         const actionNonceData = await this.prisma.actionNonce.findUnique({
             where: {
                 nonce: nonce,
                 used: false,
                 walletAddress: normalizedAddress,
+                action,
+                strategyType,
+                asset,
+                intervalAmount: BigInt(intervalAmount!),
+                intervalDays,
+                acceptedSlippage,
+                totalAmount: BigInt(totalAmount!),
                 expiresAt: {
                     gt: Date()
                 }
             }
         })
+
         if(!actionNonceData) {
             throw new Error('Invalid nonce or expired')
         } 
-        if(action != actionNonceData.action || JSON.stringify(actionData) != JSON.stringify(actionNonceData.actionData)) {
-            throw new Error("Action or Action Data don't match in records")
-        }
 
         const unprefixedHex = getUnprefixedHex(signature)
         const recoverWalletAddress = await this.cryptoService.getWalletAddressFromSignature(message, `0x${unprefixedHex}`)
@@ -127,13 +138,17 @@ export class WalletAuthService {
         return {
             to: "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb", // USDT contract
             data: this.createApproveTransaction(
-                actionData.totalAmount,
-                strategyContractAddresses[actionData.asset as keyof typeof strategyContractAddresses]
+                totalAmount!,
+                strategyContractAddresses[asset!]
             ),
             value: "0x0",
             gasLimit: "0x15F90", // 90,000 gas (typical for approve)
             gasPrice: "0x77359400" // Or get from gas estimation API
         };
+        } catch (error) {
+            throw new Error('Unable to verify action nonce')
+        }
+        
     }
 
     private createApproveTransaction(amount: string, spenderAddress: string): string {

@@ -2,7 +2,13 @@ import * as crypto from "crypto"
 import { recoverMessageAddress, Signature } from "viem"
 import jwt from "jsonwebtoken";
 import { SignOptions } from "jsonwebtoken"
+import { ASSET_TYPE, STRATEGY_TYPE } from "@prisma/client";
 export class CryptoService {
+
+
+    private readonly VALID_STRATEGY_TYPES: string[] = ['DCA', 'DCA_WITH_DMA'];
+    private readonly VALID_ASSET_TYPES: string[] = ['BTC', 'ETH', 'HYPE'];
+    
     generateAuthNonce(): string {
         return crypto.randomBytes(32).toString('hex')
     }
@@ -13,10 +19,6 @@ export class CryptoService {
 
     createAuthMessage(nonce: string): string {
         return `Sign this message to authenticate ${nonce}`
-    }
-
-    createActionMessage(nonce: string, action: string, actionData: string) {
-        return `Sign this message to authenticate action ${this.formatActionData(action, actionData)} with nonce: ${nonce}`
     }
 
     getWalletAddressFromSignature(message: string, signature: `0x${string}`): Promise<string> {
@@ -44,109 +46,115 @@ export class CryptoService {
             return null;
         }
     }
-
-    private formatActionData(action: string, actionData: any): string {
+    createActionMessage(
+        nonce: string, 
+        action: string, 
+        strategyType: string,
+        asset: string,
+        intervalAmount: string,
+        intervalDays: number,
+        acceptedSlippage: number,
+        totalAmount: string
+    ): string {
         switch (action) {
             case 'CREATE_STRATEGY':
-                return `Strategy Details:
-    - Asset: ${actionData.asset}
-    - Interval Amount: ${actionData.intervalAmount}
-    - Interval Days: ${actionData.intervalDays}
-    - Slippage: ${actionData.acceptedSlippage || '1.0'}%
-    - Total Amount: ${actionData.totalAmount}
-    `;
-    
+                return `Sign this message to authenticate action CREATE_STRATEGY with details:
+Asset: ${asset}
+Strategy Type: ${strategyType}
+Interval Amount: ${intervalAmount}
+Interval Days: ${intervalDays}
+Accepted Slippage: ${acceptedSlippage}%
+Total Amount: ${totalAmount}
+Nonce: ${nonce}`;
+
+            case 'UPDATE_STRATEGY':
+                return `Sign this message to authenticate action UPDATE_STRATEGY with details:
+Asset: ${asset}
+Strategy Type: ${strategyType}
+Interval Amount: ${intervalAmount}
+Interval Days: ${intervalDays}
+Accepted Slippage: ${acceptedSlippage}%
+Total Amount: ${totalAmount}
+Nonce: ${nonce}`;
+
             case 'UPDATE_PROFILE':
-                return `Profile Updates:
-    - Name: ${actionData.name || 'No change'}
-    - Email: ${actionData.email || 'No change'}`;
-    
+                return `Sign this message to authenticate action UPDATE_PROFILE with nonce: ${nonce}`;
+
             default:
-                return `Action Data:
-    ${JSON.stringify(actionData, null, 2)}`;
+                return `Sign this message to authenticate action ${action} with nonce: ${nonce}`;
         }
     }
 
-    parseActionMessage(message: string): { action: string; actionData: any; nonce: string } | null {
-        try {
-            // Extract nonce using regex
-            const nonceMatch = message.match(/with nonce: (.+)$/);
-            if (!nonceMatch) return null;
-            const nonce = nonceMatch[1];
-    
-            // Extract action - it's between "authenticate action " and the first newline or "with nonce"
-            const actionMatch = message.match(/authenticate action (.+?) with nonce:/s);
-            if (!actionMatch) return null;
-            const actionSection = actionMatch[1].trim();
-    
-            // Determine action type based on content
-            let action: string = "UNKNOWN"; // default value
-            let actionData: any = {};
-    
-            if (actionSection.includes('Strategy Details:')) {
-                action = 'CREATE_STRATEGY';
-                actionData = this.parseStrategyData(actionSection);
-            } else if (actionSection.includes('Profile Updates:')) {
-                action = 'UPDATE_PROFILE';
-                actionData = this.parseProfileData(actionSection);
-            } else if (actionSection.includes('Action Data:')) {
-                // Try to parse JSON for default case
-                const jsonMatch = actionSection.match(/Action Data:\s*(.+)/s);
-                if (jsonMatch) {
-                    try {
-                        actionData = JSON.parse(jsonMatch[1].trim());
-                        action = 'UNKNOWN'; // You might want to handle this differently
-                    } catch {
-                        return null;
-                    }
-                }
-            } else {
-                return null; // Explicitly return if no action matched
+    // Parse message string back to data
+    parseActionMessage(message: string): {
+        nonce: string;
+        action: string;
+        asset?: ASSET_TYPE;
+        strategyType?: STRATEGY_TYPE;
+        intervalAmount?: string;
+        intervalDays?: number;
+        acceptedSlippage?: string;
+        totalAmount?: string;
+    } {
+        const lines = message.split('\n');
+        
+        // Extract nonce (always present)
+        const nonceLine = lines.find(line => line.startsWith('Nonce:'));
+        const nonce = nonceLine ? nonceLine.replace('Nonce:', '').trim() : '';
+        
+        // Extract action
+        const actionMatch = message.match(/authenticate action (\w+)/);
+        const action = actionMatch ? actionMatch[1] : '';
+        
+        // For strategy actions, extract details
+        if (action === 'CREATE_STRATEGY' || action === 'UPDATE_STRATEGY') {
+            const assetLine = lines.find(line => line.startsWith('Asset:'));
+            const strategyTypeLine = lines.find(line => line.startsWith('Strategy Type:'));
+            const intervalAmountLine = lines.find(line => line.startsWith('Interval Amount:'));
+            const intervalDaysLine = lines.find(line => line.startsWith('Interval Days:'));
+            const slippageLine = lines.find(line => line.startsWith('Accepted Slippage:'));
+            const totalAmountLine = lines.find(line => line.startsWith('Total Amount:'));
+
+
+            const asset = assetLine?.replace('Asset:', '').trim();
+            const strategyType = strategyTypeLine?.replace('Strategy Type:', '').trim();
+            const intervalAmount = intervalAmountLine?.replace('Interval Amount:', '').trim();
+            const intervalDaysStr = intervalDaysLine?.replace('Interval Days:', '').trim();
+            const acceptedSlippage = slippageLine?.replace('Accepted Slippage:', '').replace('%', '').trim();
+            const totalAmount = totalAmountLine?.replace('Total Amount:', '').trim();
+
+            if (!asset || !this.isValidAssetType(asset)) {
+                throw new Error(`Invalid asset type: ${asset}`);
             }
-    
-            return { action, actionData, nonce };
-        } catch (error) {
-            return null;
+            
+            if (!strategyType || !this.isValidStrategyType(strategyType)) {
+                throw new Error(`Invalid strategy type: ${strategyType}`);
+            }
+            return {
+                    nonce,
+                    action,
+                    asset: asset as ASSET_TYPE,
+                    strategyType: strategyType as STRATEGY_TYPE,
+                    intervalAmount,
+                    intervalDays: Number(intervalDaysStr),
+                    acceptedSlippage,
+                    totalAmount
+                };
         }
-    }
-    
-    private parseStrategyData(actionSection: string): any {
-        const data: any = {};
         
-        const assetMatch = actionSection.match(/- Asset: (.+)/);
-        if (assetMatch) data.asset = assetMatch[1].trim();
-        
-        const intervalAmountMatch = actionSection.match(/- Interval Amount: (.+)/);
-        if (intervalAmountMatch) data.intervalAmount = intervalAmountMatch[1].trim();
-        
-        const intervalDaysMatch = actionSection.match(/- Interval Days: (.+)/);
-        if (intervalDaysMatch) data.intervalDays = parseFloat(intervalDaysMatch[1].trim());
-        
-        const slippageMatch = actionSection.match(/- Slippage: (.+)%/);
-        if (slippageMatch) data.acceptedSlippage = parseFloat(slippageMatch[1].trim());
-        
-        const totalAmountMatch = actionSection.match(/- Total Amount: (.+)/);
-        if (totalAmountMatch) data.totalAmount = totalAmountMatch[1].trim();
-        
-        return data;
+        // For other actions, return basic info
+        return {
+            nonce,
+            action
+        };
     }
 
-    private parseProfileData(actionSection: string): any {
-        const data: any = {};
-        
-        const nameMatch = actionSection.match(/- Name: (.+)/);
-        if (nameMatch) {
-            const name = nameMatch[1].trim();
-            if (name !== 'No change') data.name = name;
-        }
-        
-        const emailMatch = actionSection.match(/- Email: (.+)/);
-        if (emailMatch) {
-            const email = emailMatch[1].trim();
-            if (email !== 'No change') data.email = email;
-        }
-        
-        return data;
+    private isValidStrategyType(value: string): value is STRATEGY_TYPE {
+        return this.VALID_STRATEGY_TYPES.includes(value);
+    }
+
+    private isValidAssetType(value: string): value is ASSET_TYPE {
+        return this.VALID_ASSET_TYPES.includes(value);
     }
     
 }

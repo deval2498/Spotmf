@@ -1,18 +1,18 @@
-import { Prisma, PrismaClient, User_Strategy, ASSET_TYPE } from "@prisma/client";
+import { Prisma, PrismaClient, ASSET_TYPE, STRATEGY_TYPE, UserStrategy } from "@prisma/client";
 import type { GetAllUserStrategyRequest, GetUserStrategyRequest, CreateUserStrategyRequest } from "../types/strategy.types.ts";
 
 export class UserStrategyService {
     constructor(private prisma: PrismaClient){}
-    async getAllUserStrategy({walletAddress}: GetAllUserStrategyRequest): Promise<User_Strategy[]> {
-        return await this.prisma.user_Strategy.findMany({
+    async getAllUserStrategy({walletAddress}: GetAllUserStrategyRequest): Promise<UserStrategy[]> {
+        return await this.prisma.userStrategy.findMany({
             where: {
                 walletAddress
             }
         })
     }
 
-    async getUserStrategy({userStrategyId}: GetUserStrategyRequest): Promise<User_Strategy | null> {
-        return await this.prisma.user_Strategy.findUnique({
+    async getUserStrategy({userStrategyId}: GetUserStrategyRequest): Promise<UserStrategy | null> {
+        return await this.prisma.userStrategy.findUnique({
             where: {
                 id: userStrategyId
             }
@@ -54,15 +54,35 @@ export class UserStrategyService {
 
     async storeSignedStrategyTxn({ signature, actionId, walletAddress }: CreateUserStrategyRequest): Promise<void> {
         const actionData = await this.prisma.actionNonce.findUnique({
-            where : {
+            where: {
                 id: actionId
             }
         })
+        
         if(!actionData) {
             throw new Error('Invalid action id')
         }
+        
         if(actionData.walletAddress != walletAddress) {
             throw new Error('Action data wallet address mismatch, transaction not saved!')
         }
+        
+        // Check if action nonce is not expired and not used
+        if(actionData.expiresAt < new Date()) {
+            throw new Error('Action nonce has expired')
+        }
+        
+        if(actionData.used) {
+            throw new Error('Action nonce has already been used')
+        }
+        
+        // Create UserStrategy with required fields
+        await this.prisma.userStrategy.create({
+            data: {
+                walletAddress: actionData.walletAddress,
+                actionNonceId: actionData.id,
+                signedRawTxnHash: signature,
+            }
+        })
     }
 }

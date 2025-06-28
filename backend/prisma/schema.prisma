@@ -39,15 +39,22 @@ model AuthNonces {
 }
 
 model ActionNonce {
-  id            String    @id @default(cuid())
-  walletAddress String    @map("wallet_address") @db.VarChar(42)
-  nonce         String    @unique @db.VarChar(64)
-  action        String    @db.VarChar(100) // 'CREATE_STRATEGY', 'UPDATE_STRATEGY', etc.
-  actionData    Json      @map("action_data") // COMPLETE strategy configuration data
-  expiresAt     DateTime  @map("expires_at")
-  used          Boolean   @default(false)
-  usedAt        DateTime? @map("used_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
+  id               String        @id @default(cuid())
+  walletAddress    String        @map("wallet_address") @db.VarChar(42)
+  nonce            String        @unique @db.VarChar(64)
+  action           String        @db.VarChar(100) // 'CREATE_STRATEGY', 'UPDATE_STRATEGY', etc.
+  // Normalized fields instead of JSON - MUCH BETTER!
+  strategyType     STRATEGY_TYPE @map("strategy_type")
+  asset            ASSET_TYPE
+  intervalAmount   BigInt        @map("interval_amount") // Use BigInt for wei amounts
+  intervalDays     Int           @map("interval_days")
+  acceptedSlippage Decimal       @map("accepted_slippage") @db.Decimal(5, 2)
+  totalAmount      BigInt        @map("total_amount")
+  strategyId       String?       @map("strategy_id") // For UPDATE_STRATEGY actions
+  expiresAt        DateTime      @map("expires_at")
+  used             Boolean       @default(false)
+  usedAt           DateTime?     @map("used_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
 
   // Relations
   user         User          @relation(fields: [walletAddress], references: [walletAddress], onDelete: Cascade)
@@ -63,15 +70,6 @@ model UserStrategy {
   id            String @id @default(cuid())
   walletAddress String @map("wallet_address") @db.VarChar(42)
   actionNonceId String @unique @map("action_nonce_id") // Links back to the action nonce
-
-  // ALL fields populated from ActionNonce.actionData
-  type             STRATEGY_TYPE
-  asset            ASSET_TYPE
-  intervalAmount   BigInt        @map("interval_amount") // Amount per interval in wei
-  intervalDays     Int           @map("interval_days") // Days between executions
-  acceptedSlippage Decimal       @default(1.0) @map("accepted_slippage") @db.Decimal(5, 2)
-  contractAddress  String?       @map("contract_address") // Token contract being approved
-  approvedAmount   BigInt?       @map("approved_amount") // Amount approved for spending
 
   // Transaction data (added after signing)
   signedRawTxnHash String? @map("signed_raw_txn_hash") // ERC20 approve transaction
@@ -95,7 +93,6 @@ model UserStrategy {
 
   @@index([walletAddress, isActive])
   @@index([status, nextExecutionAt])
-  @@index([asset, type])
   @@map("user_strategies")
 }
 

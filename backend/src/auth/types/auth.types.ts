@@ -1,3 +1,5 @@
+import { ASSET_TYPE, STRATEGY_TYPE } from "@prisma/client";
+
 export interface ChallengeRequest {
     walletAddress: string;
 }
@@ -17,7 +19,12 @@ export interface VerifySignatureResponse {
 
 export interface CreateActionNonceRequest {
     action: string;
-    actionData: string;
+    strategyType: STRATEGY_TYPE;
+    asset: ASSET_TYPE;
+    intervalAmount: BigInt;
+    intervalDays: number;
+    acceptedSlippage: number;
+    totalAmount: BigInt;
     walletAddress: string;
 }
 
