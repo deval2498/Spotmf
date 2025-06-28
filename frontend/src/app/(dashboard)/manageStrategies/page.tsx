@@ -6,16 +6,33 @@ import {
   Trash2,
   TrendingUp,
   Target,
-  Calendar,
   ArrowRight,
   ArrowLeft,
   Check,
   X,
   BarChart3,
-  DollarSign,
   Clock,
 } from "lucide-react";
 import StrategyModal from "./components/StrategyModal";
+import {
+  strategyFormSchema,
+  type StrategyFormData,
+} from "@/lib/validations/strategy";
+
+// Strategy form state type
+interface StrategyFormState {
+  type: string;
+  asset: string;
+  strategyType: string;
+  intervalDays: string;
+  intervalAmount: string;
+  totalAmount: string;
+  acceptedSlippage: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
 
 const ManageStrategies = () => {
   const [view, setView] = useState("list"); // 'list', 'create', 'edit'
@@ -55,26 +72,40 @@ const ManageStrategies = () => {
     },
   ]);
 
-  const [newStrategy, setNewStrategy] = useState({
-    name: "",
+  const [newStrategy, setNewStrategy] = useState<StrategyFormState>({
     type: "",
-    riskLevel: "",
-    timeHorizon: "",
-    initialAmount: "",
-    allocation: {
-      stocks: 0,
-      bonds: 0,
-      cash: 0,
-      crypto: 0,
-    },
-    rebalancing: "quarterly",
+    asset: "",
+    strategyType: "",
+    intervalDays: "",
+    intervalAmount: "",
+    totalAmount: "",
+    acceptedSlippage: "1.0",
   });
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const createSteps = [
     { title: "Setup strategy", icon: Target },
     { title: "Setup timelines and amounts", icon: TrendingUp },
     { title: "Review and Sign", icon: Check },
   ];
+
+  const validateForm = (): boolean => {
+    try {
+      strategyFormSchema.parse(newStrategy);
+      setFormErrors({});
+      return true;
+    } catch (error: any) {
+      const errors: FormErrors = {};
+      error.errors?.forEach((err: any) => {
+        if (err.path) {
+          errors[err.path[0]] = err.message;
+        }
+      });
+      setFormErrors(errors);
+      return false;
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < createSteps.length - 1) {
@@ -95,15 +126,6 @@ const ManageStrategies = () => {
   const handleCreate = () => {
     setView("create");
     setCurrentStep(0);
-    setNewStrategy({
-      name: "",
-      type: "",
-      riskLevel: "",
-      timeHorizon: "",
-      initialAmount: "",
-      allocation: { stocks: 0, bonds: 0, cash: 0, crypto: 0 },
-      rebalancing: "quarterly",
-    });
   };
 
   const handleEdit = (strategy) => {
@@ -134,6 +156,9 @@ const ManageStrategies = () => {
                 <label className="block text-sm font-medium text-zinc-300">
                   Select Asset Type
                 </label>
+                {formErrors.asset && (
+                  <p className="text-sm text-red-400">{formErrors.asset}</p>
+                )}
 
                 <div className="flex gap-2">
                   {[
@@ -156,23 +181,23 @@ const ManageStrategies = () => {
                     <label
                       key={option.value}
                       className={`
-          flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm
-          ${
-            newStrategy.assetType === option.value
-              ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-zinc-100"
-              : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
-          }
-        `}
+                        flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm
+                        ${
+                          newStrategy.asset === option.value
+                            ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-zinc-100"
+                            : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+                        }
+                      `}
                     >
                       <input
                         type="radio"
-                        name="assetType"
+                        name="asset"
                         value={option.value}
-                        checked={newStrategy.assetType === option.value}
+                        checked={newStrategy.asset === option.value}
                         onChange={(e) =>
                           setNewStrategy({
                             ...newStrategy,
-                            assetType: e.target.value,
+                            asset: e.target.value,
                           })
                         }
                         className="sr-only"
@@ -192,13 +217,13 @@ const ManageStrategies = () => {
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       {
-                        value: "200DMA",
+                        value: "DCA_WITH_DMA",
                         label: "200DMA",
                         description: "Focus on market dips for more returns",
                         icon: "💰",
                       },
                       {
-                        value: "Simple",
+                        value: "DCA",
                         label: "Simple",
                         description: "Regular SIP plan",
                         icon: "📈",
@@ -275,9 +300,9 @@ const ManageStrategies = () => {
                 </label>
                 <div className="flex gap-2">
                   {[
-                    { value: 7, label: "Weekly" },
-                    { value: 14, label: "Bi-weekly" },
-                    { value: 30, label: "Monthly" },
+                    { value: "7", label: "Weekly" },
+                    { value: "14", label: "Bi-weekly" },
+                    { value: "30", label: "Monthly" },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -307,7 +332,7 @@ const ManageStrategies = () => {
                         const value = e.target.value.replace(/[^0-9]/g, "");
                         setNewStrategy({
                           ...newStrategy,
-                          intervalDays: value ? parseInt(value) : "",
+                          intervalDays: value,
                         });
                       }}
                       className="w-16 px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm text-center focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -322,17 +347,17 @@ const ManageStrategies = () => {
                   Amount per interval
                 </label>
                 <div className="flex gap-2 mb-2">
-                  {[50, 100, 250, 500].map((amount) => (
+                  {["50", "100", "250", "500"].map((amount) => (
                     <button
                       key={amount}
                       onClick={() =>
                         setNewStrategy({
                           ...newStrategy,
-                          amountPerInterval: amount,
+                          intervalAmount: amount,
                         })
                       }
                       className={`px-3 py-2 rounded-lg border transition-all text-sm flex-1 ${
-                        newStrategy.amountPerInterval === amount
+                        newStrategy.intervalAmount === amount
                           ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-[#ff6b6b]"
                           : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600"
                       }`}
@@ -349,12 +374,12 @@ const ManageStrategies = () => {
                     type="text"
                     inputMode="decimal"
                     placeholder="0.00"
-                    value={newStrategy.amountPerInterval || ""}
+                    value={newStrategy.intervalAmount || ""}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^0-9.]/g, "");
                       setNewStrategy({
                         ...newStrategy,
-                        amountPerInterval: value ? parseFloat(value) : "",
+                        intervalAmount: value,
                       });
                     }}
                     className="w-full pl-6 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -376,12 +401,12 @@ const ManageStrategies = () => {
                     type="text"
                     inputMode="decimal"
                     placeholder="0.00"
-                    value={newStrategy.totalBudget || ""}
+                    value={newStrategy.totalAmount || ""}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^0-9.]/g, "");
                       setNewStrategy({
                         ...newStrategy,
-                        totalBudget: value ? parseFloat(value) : "",
+                        totalAmount: value,
                       });
                     }}
                     className="w-full pl-6 pr-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:outline-none focus:border-[#ff6b6b] transition-colors placeholder-zinc-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -393,20 +418,20 @@ const ManageStrategies = () => {
               </div>
 
               {/* Summary */}
-              {newStrategy.amountPerInterval && newStrategy.intervalDays && (
+              {newStrategy.intervalAmount && newStrategy.intervalDays && (
                 <div className="p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
                   <p className="text-sm text-zinc-300">
                     <span className="font-medium">Summary:</span> Investing $
-                    {newStrategy.amountPerInterval} every{" "}
+                    {newStrategy.intervalAmount} every{" "}
                     {newStrategy.intervalDays} day
-                    {newStrategy.intervalDays !== 1 ? "s" : ""}
-                    {newStrategy.totalBudget && (
+                    {newStrategy.intervalDays !== "1" ? "s" : ""}
+                    {newStrategy.totalAmount && (
                       <>
                         {" "}
                         for{" "}
                         {Math.floor(
-                          newStrategy.totalBudget /
-                            newStrategy.amountPerInterval
+                          Number(newStrategy.totalAmount) /
+                            Number(newStrategy.intervalAmount)
                         )}{" "}
                         intervals
                       </>
@@ -427,7 +452,7 @@ const ManageStrategies = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-zinc-400">Asset Type:</span>{" "}
-                  <span className="text-zinc-100">{newStrategy.name}</span>
+                  <span className="text-zinc-100">{newStrategy.asset}</span>
                 </div>
                 <div>
                   <span className="text-zinc-400">Strategy Type:</span>{" "}
@@ -435,30 +460,19 @@ const ManageStrategies = () => {
                 </div>
                 <div>
                   <span className="text-zinc-400">Interval Days:</span>{" "}
-                  <span className="text-zinc-100">{newStrategy.riskLevel}</span>
+                  <span className="text-zinc-100">
+                    {newStrategy.intervalDays}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-zinc-400">Amount:</span>{" "}
-                  <span className="text-zinc-100">
-                    {newStrategy.timeHorizon}
-                  </span>
+                  <span className="text-zinc-400">Amount:</span>
+                  {newStrategy.intervalAmount}
                 </div>
               </div>
               <div>
-                <span className="text-zinc-400 text-sm">Total Amount:</span>
-                <div className="mt-2 space-y-1">
-                  {Object.entries(newStrategy.allocation).map(
-                    ([asset, value]) =>
-                      value > 0 && (
-                        <div
-                          key={asset}
-                          className="text-sm text-zinc-100 capitalize"
-                        >
-                          {asset}: {value}%
-                        </div>
-                      )
-                  )}
-                </div>
+                <span className="text-zinc-400 text-sm">
+                  Total Amount: {newStrategy.totalAmount}
+                </span>
               </div>
             </div>
           </div>
@@ -561,11 +575,13 @@ const ManageStrategies = () => {
                 : "Next"}
               <ArrowRight className="w-4 h-4" />
             </button>
-            <StrategyModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onComplete={handleStrategyComplete}
-            />
+            {
+              <StrategyModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onComplete={handleStrategyComplete}
+              />
+            }
           </div>
         </div>
       </div>
