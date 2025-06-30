@@ -172,14 +172,18 @@ export class WalletAuthService {
             }
         })
         return {
-            to: "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb", // USDT contract
-            data: this.createApproveTransaction(
+            txn: {
+                to: "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb", // USDT contract
+                data: this.createApproveTransaction(
                 totalAmount!,
                 strategyContractAddresses[asset!]
-            ),
-            value: "0x0",
-            gasLimit: "0x15F90", // 90,000 gas (typical for approve)
-            gasPrice: "0x77359400" // Or get from gas estimation API
+                ),
+                value: "0x0",
+                gasLimit: "0x15F90", // 90,000 gas (typical for approve)
+                gasPrice: "0x77359400" // Or get from gas estimation API
+            },
+            actionId: actionNonceData.id
+            
         };
         } catch (error) {
             console.log(error)

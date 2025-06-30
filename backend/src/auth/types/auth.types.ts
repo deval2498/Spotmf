@@ -39,9 +39,12 @@ export interface VerifyActionRequest {
 }
 
 export interface VerifyActionResponse {
+    txn: {
     to: string;
     data: string;
     value: string;
     gasLimit: string;
     gasPrice: string;
+    },
+    actionId: string;
 }

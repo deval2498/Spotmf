@@ -52,7 +52,7 @@ export class UserStrategyService {
         
     // }
 
-    async storeSignedStrategyTxn({ signature, actionId, walletAddress }: CreateUserStrategyRequest): Promise<void> {
+    async storeSignedStrategyTxn({ txHash, actionId, walletAddress }: CreateUserStrategyRequest): Promise<void> {
         const actionData = await this.prisma.actionNonce.findUnique({
             where: {
                 id: actionId
@@ -67,21 +67,13 @@ export class UserStrategyService {
             throw new Error('Action data wallet address mismatch, transaction not saved!')
         }
         
-        // Check if action nonce is not expired and not used
-        if(actionData.expiresAt < new Date()) {
-            throw new Error('Action nonce has expired')
-        }
-        
-        if(actionData.used) {
-            throw new Error('Action nonce has already been used')
-        }
         
         // Create UserStrategy with required fields
         await this.prisma.userStrategy.create({
             data: {
                 walletAddress: actionData.walletAddress,
                 actionNonceId: actionData.id,
-                signedRawTxnHash: signature,
+                txHash: txHash,
             }
         })
     }

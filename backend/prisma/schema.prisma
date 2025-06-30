@@ -72,7 +72,7 @@ model UserStrategy {
   actionNonceId String @unique @map("action_nonce_id") // Links back to the action nonce
 
   // Transaction data (added after signing)
-  signedRawTxnHash String? @map("signed_raw_txn_hash") // ERC20 approve transaction
+  txHash String? @map("tx_hash_approval") // ERC20 approve transaction
 
   // Status and tracking
   status          STRATEGY_STATUS @default(PENDING)

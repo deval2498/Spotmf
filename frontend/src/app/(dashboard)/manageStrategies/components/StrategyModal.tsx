@@ -45,6 +45,12 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
   } = useSignMessage();
 
   const {
+    execute: storeTx,
+    data: storeTxData,
+    loading: storeTxLoading,
+  } = useApi();
+
+  const {
     sendTransaction,
     isPending: isTransactionPending,
     isSuccess: isTransactionSuccess,
@@ -153,18 +159,14 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
   }, [address, isConnected, messageData, signMessage, resetSignature]);
 
   const handleStep2 = useCallback(async (): Promise<void> => {
+    const txData = verifyCreateStrategyNonceApi.data.txn;
     console.log("Starting step 2:", {
       signedData,
-      verifyCreateStrategyNonceApi: verifyCreateStrategyNonceApi.data,
+      txData,
       address,
     });
 
-    if (
-      !signedData ||
-      !verifyCreateStrategyNonceApi.data ||
-      !address ||
-      !isConnected
-    ) {
+    if (!signedData || !txData || !address || !isConnected) {
       console.warn("Missing required data for transaction signing");
       return;
     }
@@ -175,11 +177,11 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
 
       // Prepare transaction data
       const transactionData = {
-        to: verifyCreateStrategyNonceApi.data.to as `0x${string}`,
-        data: verifyCreateStrategyNonceApi.data.data as `0x${string}`,
-        value: BigInt(verifyCreateStrategyNonceApi.data.value),
-        gas: BigInt(verifyCreateStrategyNonceApi.data.gasLimit),
-        gasPrice: BigInt(verifyCreateStrategyNonceApi.data.gasPrice),
+        to: txData.to as `0x${string}`,
+        data: txData.data as `0x${string}`,
+        value: BigInt(txData.value),
+        gas: BigInt(txData.gasLimit),
+        gasPrice: BigInt(txData.gasPrice),
       };
 
       console.log(

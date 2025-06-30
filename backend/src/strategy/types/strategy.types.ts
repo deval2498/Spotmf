@@ -9,7 +9,7 @@ export interface GetUserStrategyRequest {
 }
 
 export interface CreateUserStrategyRequest {
-    signature: string;
+    txHash: string;
     actionId: string;
     walletAddress: string;
 }
