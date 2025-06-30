@@ -52,7 +52,7 @@ export class UserStrategyService {
         
     // }
 
-    async storeSignedStrategyTxn({ txHash, actionId, walletAddress }: CreateUserStrategyRequest): Promise<void> {
+    async storeSignedStrategyTxn({ txHash, actionId, walletAddress }: CreateUserStrategyRequest): Promise<{message: string}> {
         const actionData = await this.prisma.actionNonce.findUnique({
             where: {
                 id: actionId
@@ -76,5 +76,8 @@ export class UserStrategyService {
                 txHash: txHash,
             }
         })
+        return {
+            message: "Transaction stored"
+        }
     }
 }

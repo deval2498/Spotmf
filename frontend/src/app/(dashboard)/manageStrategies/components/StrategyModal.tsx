@@ -113,7 +113,14 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
     if (isTransactionSuccess && transactionHash && step2Status === "loading") {
       setStep2Status("completed");
       console.log("Transaction sent successfully:", transactionHash);
-
+      storeTx({
+        url: "/strategy/storeSignedStrategyTxn",
+        method: "post",
+        data: {
+          txHash: transactionHash,
+          actionId: verifyCreateStrategyNonceApi.data.actionId,
+        },
+      });
       // Auto close after completion
       setTimeout(() => {
         onClose();
