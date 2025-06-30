@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSignMessage, useAccount } from "wagmi";
 import { useApi } from "@/hooks/useApi";
 
@@ -10,8 +10,7 @@ export function Card({
   message: string;
 }) {
   const { address, isConnected } = useAccount();
-  const [shouldCallApi, setShouldCallApi] = useState(false);
-  const [apiBody, setApiBody] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const {
     signMessage,
@@ -19,49 +18,89 @@ export function Card({
     isSuccess,
     error,
     data: signedData,
+    reset: resetSignature,
   } = useSignMessage();
 
-  // Call API after successful signing
   const {
+    execute,
     data: apiData,
     loading: apiLoading,
     error: apiError,
-  } = useApi(
-    shouldCallApi ? "/auth/verify" : "", // Only call when shouldCallApi is true
-    "post",
-    apiBody
+  } = useApi();
+
+  // Memoized API call function
+  const verifySignature = useCallback(
+    async (signature: string, walletAddress: string) => {
+      try {
+        setIsVerifying(true);
+        const result = await execute({
+          url: "auth/verify",
+          method: "post",
+          data: {
+            signature,
+            walletAddress,
+          },
+        });
+        return result;
+      } catch (err) {
+        console.error("Verification failed:", err);
+        throw err;
+      } finally {
+        setIsVerifying(false);
+      }
+    },
+    [execute]
   );
 
-  // Watch for successful signature
+  // Handle successful signature and trigger API call
   useEffect(() => {
-    if (isSuccess && signedData && address) {
-      // Prepare the API body with signature data
-      setApiBody({
-        signature: signedData,
-        walletAddress: address,
-      });
-      setShouldCallApi(true);
+    if (isSuccess && signedData && address && !isVerifying) {
+      verifySignature(signedData, address);
     }
-  }, [isSuccess, signedData, address, message]);
-  // Handle API response
+  }, [isSuccess, signedData, address, verifySignature, isVerifying]);
+
+  // Handle successful API response
   useEffect(() => {
     if (apiData && !apiLoading && !apiError) {
-      window.localStorage.setItem("jwt", `Bearer ${apiData.jwt}`);
-      // Handle successful API response
-      setShowModal(false);
-    }
-  }, [apiData, apiLoading, apiError, setShowModal]);
+      try {
+        // Store JWT token
+        window.localStorage.setItem("jwt", `Bearer ${apiData.jwt}`);
 
-  const handleSignMessage = (message: string) => {
-    if (address && isConnected) {
-      // Reset API state before signing
-      setShouldCallApi(false);
-      setApiBody(null);
-      signMessage({ message, account: address });
-    }
-  };
+        // Close modal on success
+        setShowModal(false);
 
-  const isProcessing = isPending || (isSuccess && apiLoading);
+        // Reset signature state for next use
+        resetSignature?.();
+      } catch (err) {
+        console.error("Failed to store JWT:", err);
+      }
+    }
+  }, [apiData, apiLoading, apiError, setShowModal, resetSignature]);
+
+  const handleSignMessage = useCallback(() => {
+    if (!address || !isConnected) {
+      console.warn("Wallet not connected");
+      return;
+    }
+
+    if (!message) {
+      console.warn("No message provided");
+      return;
+    }
+
+    // Reset any previous states
+    resetSignature?.();
+    setIsVerifying(false);
+
+    // Sign the message
+    signMessage({ message, account: address });
+  }, [address, isConnected, message, signMessage, resetSignature]);
+
+  // Determine loading state
+  const isProcessing = isPending || isVerifying || apiLoading;
+
+  // Determine error state
+  const currentError = error || apiError;
 
   return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
@@ -71,6 +110,7 @@ export function Card({
           onClick={() => setShowModal(false)}
           disabled={isProcessing}
           className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-300 transition-colors duration-200 disabled:opacity-50"
+          aria-label="Close modal"
         >
           <svg
             className="w-5 h-5"
@@ -87,9 +127,8 @@ export function Card({
           </svg>
         </button>
 
-        {/* Minimal header */}
+        {/* Header */}
         <div className="text-center mb-8">
-          {/* Privacy shield icon */}
           <div className="flex justify-center mb-4">
             <svg
               className="w-12 h-12 text-[#ff6b6b]"
@@ -119,8 +158,8 @@ export function Card({
         {/* Sign button */}
         <div className="flex justify-center">
           <button
-            onClick={() => handleSignMessage(message)}
-            disabled={isProcessing}
+            onClick={handleSignMessage}
+            disabled={isProcessing || !isConnected || !address}
             className="w-full px-4 py-3 border border-[#f6339a]/30 text-[#f6339a] rounded-md font-medium transition-all duration-200 hover:border-[#f6339a] hover:bg-[#f6339a]/5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isProcessing && (
@@ -128,14 +167,27 @@ export function Card({
             )}
             {isPending
               ? "Signing..."
-              : isSuccess && apiLoading
+              : isVerifying || apiLoading
               ? "Verifying..."
               : "Sign Message"}
           </button>
         </div>
-        {error && (
-          <div className="mt-4 p-3 border border-red-500/30 rounded-md">
-            <p className="text-red-400 text-sm">Error: {error.message}</p>
+
+        {/* Error display */}
+        {currentError && (
+          <div className="mt-4 p-3 border border-red-500/30 rounded-md bg-red-500/5">
+            <p className="text-red-400 text-sm">
+              {currentError.message || "An error occurred"}
+            </p>
+          </div>
+        )}
+
+        {/* Connection status */}
+        {!isConnected && (
+          <div className="mt-4 p-3 border border-yellow-500/30 rounded-md bg-yellow-500/5">
+            <p className="text-yellow-400 text-sm">
+              Please connect your wallet first
+            </p>
           </div>
         )}
       </div>

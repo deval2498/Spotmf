@@ -14,20 +14,18 @@ import {
   Clock,
 } from "lucide-react";
 import StrategyModal from "./components/StrategyModal";
-import {
-  strategyFormSchema,
-  type StrategyFormData,
-} from "@/lib/validations/strategy";
+import { strategyFormSchema } from "@/lib/validations/strategy";
+import { useApi } from "@/hooks/useApi";
 
 // Strategy form state type
 interface StrategyFormState {
-  type: string;
   asset: string;
   strategyType: string;
   intervalDays: string;
   intervalAmount: string;
   totalAmount: string;
   acceptedSlippage: string;
+  action: string;
 }
 
 interface FormErrors {
@@ -73,16 +71,18 @@ const ManageStrategies = () => {
   ]);
 
   const [newStrategy, setNewStrategy] = useState<StrategyFormState>({
-    type: "",
     asset: "",
     strategyType: "",
     intervalDays: "",
     intervalAmount: "",
     totalAmount: "",
     acceptedSlippage: "1.0",
+    action: "CREATE_STRATEGY",
   });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  const createStrategyApi = useApi();
 
   const createSteps = [
     { title: "Setup strategy", icon: Target },
@@ -113,8 +113,20 @@ const ManageStrategies = () => {
     }
   };
 
-  const handleCreateStrategy = () => {
-    setIsModalOpen(true);
+  const handleCreateStrategy = async () => {
+    try {
+      if (!validateForm()) throw new Error("Invalid strategy form");
+      await createStrategyApi.execute({
+        url: "auth/create-action",
+        method: "post",
+        data: newStrategy,
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      console.log(newStrategy);
+      console.log(formErrors);
+      console.log(error);
+    }
   };
 
   const handlePrev = () => {
@@ -183,7 +195,7 @@ const ManageStrategies = () => {
                       className={`
                         flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm
                         ${
-                          newStrategy.asset === option.value
+                          newStrategy.asset === option.symbol
                             ? "border-[#ff6b6b] bg-[#ff6b6b]/10 text-zinc-100"
                             : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                         }
@@ -192,8 +204,8 @@ const ManageStrategies = () => {
                       <input
                         type="radio"
                         name="asset"
-                        value={option.value}
-                        checked={newStrategy.asset === option.value}
+                        value={option.symbol}
+                        checked={newStrategy.asset === option.symbol}
                         onChange={(e) =>
                           setNewStrategy({
                             ...newStrategy,
@@ -234,7 +246,7 @@ const ManageStrategies = () => {
                         className={`
                               relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02]
                               ${
-                                newStrategy.type === option.value
+                                newStrategy.strategyType === option.value
                                   ? "border-[#ff6b6b] bg-gradient-to-br from-[#ff6b6b]/10 to-[#ff6b6b]/5 shadow-lg shadow-[#ff6b6b]/20"
                                   : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600 hover:bg-zinc-800/70"
                               }
@@ -244,31 +256,17 @@ const ManageStrategies = () => {
                           type="radio"
                           name="strategyType"
                           value={option.value}
-                          checked={newStrategy.type === option.value}
+                          checked={newStrategy.strategyType === option.value}
                           onChange={(e) =>
                             setNewStrategy({
                               ...newStrategy,
-                              type: e.target.value,
+                              strategyType: e.target.value,
                             })
                           }
                           className="sr-only"
                         />
 
                         {/* Selection indicator */}
-                        <div
-                          className={`
-                            absolute top-3 right-3 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-                            ${
-                              newStrategy.type === option.value
-                                ? "border-[#ff6b6b] bg-[#ff6b6b]"
-                                : "border-zinc-600"
-                            }
-                          `}
-                        >
-                          {newStrategy.type === option.value && (
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          )}
-                        </div>
 
                         <div className="text-2xl mb-2">{option.icon}</div>
                         <div className="font-semibold text-zinc-100 mb-1">
@@ -456,7 +454,9 @@ const ManageStrategies = () => {
                 </div>
                 <div>
                   <span className="text-zinc-400">Strategy Type:</span>{" "}
-                  <span className="text-zinc-100">{newStrategy.type}</span>
+                  <span className="text-zinc-100">
+                    {newStrategy.strategyType}
+                  </span>
                 </div>
                 <div>
                   <span className="text-zinc-400">Interval Days:</span>{" "}
@@ -568,18 +568,53 @@ const ManageStrategies = () => {
                   ? handleCreateStrategy
                   : handleNext
               }
-              className="px-6 py-2 bg-[#ff6b6b] hover:bg-[#ff6b6b]/90 text-white rounded-lg transition-colors flex items-center gap-2"
+              disabled={createStrategyApi.loading} // Disable button when loading
+              className={`px-6 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${
+                createStrategyApi.loading
+                  ? "bg-zinc-600 cursor-not-allowed"
+                  : "bg-[#ff6b6b] hover:bg-[#ff6b6b]/90"
+              }`}
             >
-              {currentStep === createSteps.length - 1
-                ? "Create Strategy"
-                : "Next"}
-              <ArrowRight className="w-4 h-4" />
+              {currentStep === createSteps.length - 1 ? (
+                createStrategyApi.loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    Create Strategy
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
             {
               <StrategyModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onComplete={handleStrategyComplete}
+                messageData={createStrategyApi.data}
               />
             }
           </div>

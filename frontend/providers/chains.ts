@@ -11,7 +11,7 @@ export const hyperliquid = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.hyperliquid.xyz/evm'],
+      http: [process.env.NEXT_PUBLIC_HYPERLIQUID_RPC!],
     },
   },
   blockExplorers: {

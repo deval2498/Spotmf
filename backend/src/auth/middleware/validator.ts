@@ -71,7 +71,7 @@ export const validateVerifyRequest = (req: Request, res: Response, next: NextFun
 export const validateCreateActionRequest = (req: Request, res: Response, next: NextFunction) => {
     if (!validateRequestBody(req, res)) return;
     
-    const { action, actionData } = req.body;
+    const { action } = req.body;
 
     if(!actionTypeValidation(action)) {
         res.status(400).json({
@@ -79,18 +79,11 @@ export const validateCreateActionRequest = (req: Request, res: Response, next: N
         })
         return
     }
-
-    if(!actionData) {
-        res.status(400).json({
-            error: "Action data not provided"
-        })
-        return
-    }
     next();
 };
 
 export const validateJWT = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers['Authorization'] as string
+    const token = req.headers['authorization'] as string
     if(!token) {
         res.status(401).json({
             error: "No token provided"

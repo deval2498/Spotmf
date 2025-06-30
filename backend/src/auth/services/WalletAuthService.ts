@@ -41,6 +41,7 @@ export class WalletAuthService {
     }
 
     async verifyAndLogin({walletAddress, signature}: VerifySignatureRequest): Promise<VerifySignatureResponse> {
+        
         const normalizedWalletAddress = walletAddress.toLowerCase()
         const nonceData = await this.prisma.authNonces.findUnique({
             where: {
@@ -57,12 +58,31 @@ export class WalletAuthService {
         if((await recoverWalletAddress).toLowerCase() != nonceData.walletAddress) {
             throw new AuthException('Invalid address, use the correct wallet to sign from')
         }
+        await this.prisma.$transaction(async (tx) => {
+            // Delete the used auth nonce
+            await tx.authNonces.delete({
+                where: {
+                    walletAddress: normalizedWalletAddress
+                }
+            });
+            
+            // Create or update user
+            await tx.user.upsert({
+                where: {
+                    walletAddress: normalizedWalletAddress
+                },
+                update: {
+                    // Update timestamp or any other fields you want to refresh on login
+                    updatedAt: new Date()
+                },
+                create: {
+                    walletAddress: normalizedWalletAddress,
+                    // Add any other default fields you want for new users
+                    isActive: true
+                }
+            });
+        });
         const jwt = this.cryptoService.generateJWT({ walletAddress: normalizedWalletAddress}, '30d')
-        await this.prisma.authNonces.delete({
-            where: {
-                walletAddress: normalizedWalletAddress
-            }
-        })
         return {
             jwt
         }
@@ -71,17 +91,32 @@ export class WalletAuthService {
     async createActionNonce({ action, strategyType, asset, intervalAmount, intervalDays, acceptedSlippage, totalAmount, walletAddress }: CreateActionNonceRequest): Promise<CreateActionNonceResponse> {
         const normalizedAddress = walletAddress.toLowerCase();
         const nonce = this.cryptoService.generateActionNonce();
-        const actionMessage = this.cryptoService.createActionMessage(nonce, action, strategyType, asset, intervalAmount.toString(), intervalDays, acceptedSlippage, totalAmount.toString());
+        const actionMessage = this.cryptoService.createActionMessage(nonce, action, strategyType, asset, intervalAmount.toString(), parseInt(intervalDays), parseInt(acceptedSlippage), totalAmount.toString());
+        const existingUser = await this.prisma.user.findUnique({
+            where: { walletAddress: walletAddress }
+        });
+        console.log('User found:', existingUser);
+        // Also check if there's a user with different casing
+        const allUsers = await this.prisma.user.findMany({
+            where: {
+                walletAddress: {
+                    equals: normalizedAddress,
+                    mode: 'insensitive' // Case insensitive search
+                }
+            }
+        });
+        console.log('Users with similar address:', allUsers);
+
         await this.prisma.actionNonce.create({
             data: {
                 walletAddress: normalizedAddress,
                 action,
                 strategyType,
                 asset,
-                intervalDays,
-                intervalAmount: intervalAmount as bigint,
+                intervalDays: parseInt(intervalDays),
+                intervalAmount: BigInt(intervalAmount) * 1000000n,
                 acceptedSlippage,
-                totalAmount: totalAmount as bigint,
+                totalAmount: BigInt(totalAmount) * 1000000n,
                 expiresAt: new Date(Date.now() + 60 * 60 * 1000),
                 nonce
             }
@@ -95,6 +130,7 @@ export class WalletAuthService {
         try {
             const normalizedAddress = walletAddress.toLowerCase();
         const parsedMessage = this.cryptoService.parseActionMessage(message);
+        
         if(!parsedMessage) {
             throw new Error('Invalid message')
         }
@@ -107,12 +143,12 @@ export class WalletAuthService {
                 action,
                 strategyType,
                 asset,
-                intervalAmount: BigInt(intervalAmount!),
+                intervalAmount: BigInt(intervalAmount!) * 1000000n,
                 intervalDays,
                 acceptedSlippage,
-                totalAmount: BigInt(totalAmount!),
+                totalAmount: BigInt(totalAmount!) * 1000000n,
                 expiresAt: {
-                    gt: Date()
+                    gt: new Date()
                 }
             }
         })
@@ -123,7 +159,7 @@ export class WalletAuthService {
 
         const unprefixedHex = getUnprefixedHex(signature)
         const recoverWalletAddress = await this.cryptoService.getWalletAddressFromSignature(message, `0x${unprefixedHex}`)
-        if(recoverWalletAddress != actionNonceData.walletAddress) {
+        if(recoverWalletAddress.toLowerCase().trim() !== actionNonceData.walletAddress.toLowerCase().trim()) {
             throw new Error("Signed using another wallet please check")
         }
 
@@ -146,6 +182,7 @@ export class WalletAuthService {
             gasPrice: "0x77359400" // Or get from gas estimation API
         };
         } catch (error) {
+            console.log(error)
             throw new Error('Unable to verify action nonce')
         }
         

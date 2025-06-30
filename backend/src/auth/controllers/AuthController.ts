@@ -24,7 +24,7 @@ export class AuthController {
 
       async createActionNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-          const result = await this.authService.createActionNonce(req.body);
+          const result = await this.authService.createActionNonce({...req.body, ...req.user});
           res.json(result);
         } catch (error) {
           next(error)
@@ -33,7 +33,7 @@ export class AuthController {
 
       async verifyActionNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-          const result = await this.authService.verifyActionNonce(req.body);
+          const result = await this.authService.verifyActionNonce({...req.body, ...req.user});
           res.json(result)
         } catch (error) {
           next(error)

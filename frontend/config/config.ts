@@ -1,10 +1,9 @@
 import { http, createConfig } from 'wagmi'
-import { base, mainnet, optimism } from 'wagmi/chains'
 import { injected, metaMask, safe, walletConnect } from 'wagmi/connectors'
-import { hyperliquid } from './chains'
+import { hyperliquid } from '../providers/chains'
 
-const projectId = process.env.WALLETCONNECT_PROJECT_ID!
-
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!
+console.log(projectId, "checking project id")
 export const config = createConfig({
   chains: [hyperliquid],
   connectors: [
@@ -14,6 +13,6 @@ export const config = createConfig({
     safe(),
   ],
   transports: {
-    [hyperliquid.id]: http('https://rpc.hyperliquid.xyz/evm')
+    [hyperliquid.id]: http(process.env.NEXT_PUBLIC_HYPERLIQUID_RPC!)
   },
 })

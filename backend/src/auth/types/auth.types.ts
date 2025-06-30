@@ -21,10 +21,10 @@ export interface CreateActionNonceRequest {
     action: string;
     strategyType: STRATEGY_TYPE;
     asset: ASSET_TYPE;
-    intervalAmount: BigInt;
-    intervalDays: number;
-    acceptedSlippage: number;
-    totalAmount: BigInt;
+    intervalAmount: string;
+    intervalDays: string;
+    acceptedSlippage: string;
+    totalAmount: string;
     walletAddress: string;
 }
 
