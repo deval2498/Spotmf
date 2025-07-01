@@ -1,4 +1,4 @@
-import { PrismaClient,Prisma, STRATEGY_TYPE } from "@prisma/client";
+import { PrismaClient,Prisma, STRATEGY_TYPE, UserStrategy } from "@prisma/client";
 
 export interface GetAllUserStrategyRequest {
     walletAddress: string;
@@ -12,6 +12,18 @@ export interface CreateUserStrategyRequest {
     txHash: string;
     actionId: string;
     walletAddress: string;
+}
+
+export interface GetUserStrategiesRequest {
+    cursor?: string;  // ID of last item from previous page
+    limit?: number;   // Number of items per page (default: 10)
+    walletAddress?: string;  // Filter by user
+}
+
+export interface PaginatedUserStrategies {
+    data: UserStrategy[];
+    nextCursor: string | null;
+    hasMore: boolean;
 }
 
 export interface DeleteUserStrategyRequest {

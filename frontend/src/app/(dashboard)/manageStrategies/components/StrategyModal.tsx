@@ -4,7 +4,7 @@ import { useSignMessage, useAccount, useSendTransaction } from "wagmi";
 import { useApi } from "@/hooks/useApi";
 
 // Types
-type StepStatus = "pending" | "loading" | "completed" | "error";
+type StepStatus = "pending" | "loading" | "completed" | "error" | "verifying";
 
 interface StrategyModalProps {
   isOpen: boolean;
@@ -22,6 +22,24 @@ interface StepColorProps {
   step: number;
   status: StepStatus;
   currentStep: number;
+}
+
+interface Strategy {
+  id: string;
+  walletAddress: string;
+  txHash: string;
+  createdAt: string;
+  actionNonce: {
+    id: string;
+    walletAddress: string;
+    // ... other actionNonce fields
+  };
+}
+
+interface PaginatedStrategies {
+  data: Strategy[];
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 const StrategyModal: React.FC<StrategyModalProps> = ({
@@ -64,9 +82,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
   // Handle successful signature
   useEffect(() => {
     if (isSuccess && signedData && step1Status === "loading") {
-      setStep1Status("completed");
-      setCurrentStep(2);
-      console.log("Message signed successfully:", signedData);
+      setStep1Status("verifying");
       (async () => {
         await verifyCreateStrategyNonceApi.execute({
           url: "/auth/verify-action",
@@ -77,6 +93,10 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
           },
         });
       })();
+      console.log(step1Status, "checking sttatus");
+      setStep1Status("completed");
+      setCurrentStep(2);
+      console.log(step1Status, "Checking again");
     }
   }, [
     isSuccess,
@@ -111,8 +131,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
   // Handle successful transaction
   useEffect(() => {
     if (isTransactionSuccess && transactionHash && step2Status === "loading") {
-      setStep2Status("completed");
-      console.log("Transaction sent successfully:", transactionHash);
+      setStep2Status("verifying");
       storeTx({
         url: "/strategy/storeSignedStrategyTxn",
         method: "post",
@@ -121,6 +140,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
           actionId: verifyCreateStrategyNonceApi.data.actionId,
         },
       });
+      setStep2Status("completed");
       // Auto close after completion
       setTimeout(() => {
         onClose();
@@ -229,6 +249,9 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
       if (status === "loading") {
         return <Loader2 className="w-4 h-4 animate-spin" />;
       }
+      if (status === "verifying") {
+        return <Loader2 className="w-4 h-4 animate-spin" />;
+      }
       if (status === "completed") {
         return <Check className="w-4 h-4" />;
       }
@@ -282,6 +305,8 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
         return (
           <div className="text-green-400 text-xs">✓ Signed successfully</div>
         );
+      case "verifying":
+        return <div className="text-yellow-400 text-xs">Verifying...</div>;
       case "error":
         return (
           <div className="text-red-400 text-xs">✗ {getErrorMessage(error)}</div>
@@ -301,6 +326,8 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
         return (
           <div className="text-green-400 text-xs">✓ Strategy created!</div>
         );
+      case "verifying":
+        return <div className="text-yellow-400 text-xs">Verifying...</div>;
       case "error":
         return (
           <div className="text-red-400 text-xs">

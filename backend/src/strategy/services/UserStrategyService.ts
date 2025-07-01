@@ -1,22 +1,52 @@
 import { Prisma, PrismaClient, ASSET_TYPE, STRATEGY_TYPE, UserStrategy } from "@prisma/client";
-import type { GetAllUserStrategyRequest, GetUserStrategyRequest, CreateUserStrategyRequest } from "../types/strategy.types.ts";
+import type { GetAllUserStrategyRequest, GetUserStrategyRequest, CreateUserStrategyRequest, PaginatedUserStrategies, GetUserStrategiesRequest } from "../types/strategy.types.ts";
 
 export class UserStrategyService {
     constructor(private prisma: PrismaClient){}
-    async getAllUserStrategy({walletAddress}: GetAllUserStrategyRequest): Promise<UserStrategy[]> {
-        return await this.prisma.userStrategy.findMany({
-            where: {
-                walletAddress
-            }
-        })
-    }
-
     async getUserStrategy({userStrategyId}: GetUserStrategyRequest): Promise<UserStrategy | null> {
         return await this.prisma.userStrategy.findUnique({
             where: {
                 id: userStrategyId
+            },
+            include: {
+                actionNonce: true
             }
-        })
+        });
+    }
+
+    async getUserStrategies({
+        cursor,
+        limit = 10,
+        walletAddress
+    }: GetUserStrategiesRequest): Promise<PaginatedUserStrategies> {
+        const take = limit + 1; // Fetch one extra to check if there's more
+        
+        const userStrategies = await this.prisma.userStrategy.findMany({
+            where: {
+                walletAddress: walletAddress
+            },
+            include: {
+                actionNonce: true
+            },
+            orderBy: {
+                createdAt: 'desc' // Consistent ordering is crucial
+            },
+            take,
+            ...(cursor && {
+                cursor: { id: cursor },
+                skip: 1 // Skip the cursor item itself
+            })
+        });
+    
+        const hasMore = userStrategies.length > limit;
+        const data = hasMore ? userStrategies.slice(0, -1) : userStrategies;
+        const nextCursor = hasMore ? data[data.length - 1].id : null;
+    
+        return {
+            data,
+            nextCursor,
+            hasMore
+        };
     }
 
     // async createUserStrategy(createUserStrategyObject: CreateUserStrategyRequest): Promise<User_Strategy | null> {
