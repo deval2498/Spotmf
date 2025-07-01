@@ -57,36 +57,3 @@ export const INITIAL_STRATEGY_FORM: StrategyFormState = {
   acceptedSlippage: "1.0",
   action: "CREATE_STRATEGY",
 };
-
-export const MOCK_STRATEGIES = [
-  {
-    id: 1,
-    name: "Growth Portfolio",
-    type: "Long-term Investment",
-    status: "Active",
-    performance: "+12.4%",
-    allocation: "70% Stocks, 20% Bonds, 10% Cash",
-    createdDate: "2024-01-15",
-    lastModified: "2024-06-20",
-  },
-  {
-    id: 2,
-    name: "Conservative Income",
-    type: "Income Generation",
-    status: "Active",
-    performance: "+6.8%",
-    allocation: "40% Bonds, 30% Dividend Stocks, 30% REITs",
-    createdDate: "2024-02-10",
-    lastModified: "2024-06-18",
-  },
-  {
-    id: 3,
-    name: "Tech Momentum",
-    type: "Sector Focus",
-    status: "Paused",
-    performance: "-2.1%",
-    allocation: "90% Tech Stocks, 10% Cash",
-    createdDate: "2024-03-05",
-    lastModified: "2024-06-15",
-  },
-];

@@ -32,8 +32,11 @@ export class StrategyController {
                 limit: parsedLimit,
                 ...req.user // Include authenticated user context
             });
-            
-            res.json(result);
+            const transformedResult = {
+                ...result,
+                data: result.data.map((item) => JSON.parse(JSON.stringify(item, (key, value) => typeof value === 'bigint' ? value.toString() : value)))
+            }
+            res.json(transformedResult)
         } catch (error) {
             next(error);
         }

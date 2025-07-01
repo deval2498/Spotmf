@@ -6,19 +6,21 @@ import StrategyModal from "./components/StrategyModal";
 
 // Import types and constants
 import { Strategy, ViewType } from "./types";
-import { MOCK_STRATEGIES } from "./constants";
 
 // Import views
 import { StrategyList } from "./views/StrategyList";
 import { CreateStrategy } from "./views/CreateStrategy";
 import { EditStrategy } from "./views/EditStrategy";
 
+type TabType = "live" | "pending";
+
 const ManageStrategies = () => {
   const [view, setView] = useState<ViewType>("list");
   const [currentStep, setCurrentStep] = useState(0);
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [strategies, setStrategies] = useState<Strategy[]>(MOCK_STRATEGIES);
+  const [strategies, setStrategies] = useState<Strategy[] | undefined>();
+  const [activeTab, setActiveTab] = useState<TabType>("live");
 
   // Use custom hook for form management
   const {
@@ -33,9 +35,21 @@ const ManageStrategies = () => {
     execute: getStrategies,
     loading: loadingGetStrategies,
     data: getStrategiesData,
+    error: getStrategiesError,
   } = useApi();
 
   const createStrategyApi = useApi();
+
+  // Filter strategies based on active tab
+  const filteredStrategies = strategies?.filter((strategy) => {
+    if (activeTab === "live") {
+      // Live strategies: USDT approved and contract confirmed
+      return strategy.isActive && strategy.status === "ACTIVE";
+    } else {
+      // Pending strategies: awaiting approval or verification
+      return strategy.status === "PENDING" || !strategy.isActive;
+    }
+  });
 
   const handleNext = () => {
     if (currentStep < 2) {
@@ -47,6 +61,17 @@ const ManageStrategies = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const fetchStrategies = async () => {
+    await getStrategies({
+      url: "/strategy/",
+      method: "get",
+    });
+  };
+
+  const handleRetry = () => {
+    fetchStrategies();
   };
 
   const handleCreate = () => {
@@ -61,7 +86,7 @@ const ManageStrategies = () => {
   };
 
   const handleDelete = (id: number) => {
-    setStrategies(strategies.filter((s) => s.id !== id));
+    setStrategies(strategies?.filter((s) => s.id !== id));
   };
 
   const handleCreateStrategy = async () => {
@@ -93,12 +118,12 @@ const ManageStrategies = () => {
   };
 
   useEffect(() => {
-    getStrategies({ url: "/strategy/", method: "get" });
+    fetchStrategies();
   }, []);
 
   useEffect(() => {
-    if (getStrategiesData?.strategies) {
-      setStrategies(getStrategiesData.strategies);
+    if (getStrategiesData?.data) {
+      setStrategies(getStrategiesData.data);
     }
   }, [getStrategiesData]);
 
@@ -143,11 +168,15 @@ const ManageStrategies = () => {
 
   return (
     <StrategyList
-      strategies={strategies}
+      strategies={filteredStrategies}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
       onCreateClick={handleCreate}
       onEdit={handleEdit}
       onDelete={handleDelete}
       loading={loadingGetStrategies}
+      error={getStrategiesError}
+      onRetry={handleRetry}
     />
   );
 };

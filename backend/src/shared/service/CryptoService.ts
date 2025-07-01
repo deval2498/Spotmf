@@ -85,6 +85,17 @@ Nonce: ${nonce}`;
         }
     }
 
+    createDeleteActionMessage(
+        nonce: string,
+        asset: string,
+        strategyType: string
+    ): string {
+        return `Sign this message to authenticate action DELETE_STRATEGY with details:
+    Asset: ${asset}
+    Strategy Type: ${strategyType}
+    Nonce: ${nonce}`;
+    }
+
     // Parse message string back to data
     parseActionMessage(message: string): {
         nonce: string;
@@ -106,7 +117,7 @@ Nonce: ${nonce}`;
         const actionMatch = message.match(/authenticate action (\w+)/);
         const action = actionMatch ? actionMatch[1] : '';
         
-        // For strategy actions, extract details
+        // For strategy actions with full details
         if (action === 'CREATE_STRATEGY' || action === 'UPDATE_STRATEGY') {
             const assetLine = lines.find(line => line.startsWith('Asset:'));
             const strategyTypeLine = lines.find(line => line.startsWith('Strategy Type:'));
@@ -114,15 +125,14 @@ Nonce: ${nonce}`;
             const intervalDaysLine = lines.find(line => line.startsWith('Interval Days:'));
             const slippageLine = lines.find(line => line.startsWith('Accepted Slippage:'));
             const totalAmountLine = lines.find(line => line.startsWith('Total Amount:'));
-
-
+    
             const asset = assetLine?.replace('Asset:', '').trim();
             const strategyType = strategyTypeLine?.replace('Strategy Type:', '').trim();
             const intervalAmount = intervalAmountLine?.replace('Interval Amount:', '').trim();
             const intervalDaysStr = intervalDaysLine?.replace('Interval Days:', '').trim();
             const acceptedSlippage = slippageLine?.replace('Accepted Slippage:', '').replace('%', '').trim();
             const totalAmount = totalAmountLine?.replace('Total Amount:', '').trim();
-
+    
             if (!asset || !this.isValidAssetType(asset)) {
                 throw new Error(`Invalid asset type: ${asset}`);
             }
@@ -130,16 +140,41 @@ Nonce: ${nonce}`;
             if (!strategyType || !this.isValidStrategyType(strategyType)) {
                 throw new Error(`Invalid strategy type: ${strategyType}`);
             }
+    
             return {
-                    nonce,
-                    action,
-                    asset: asset as ASSET_TYPE,
-                    strategyType: strategyType as STRATEGY_TYPE,
-                    intervalAmount,
-                    intervalDays: Number(intervalDaysStr),
-                    acceptedSlippage,
-                    totalAmount
-                };
+                nonce,
+                action,
+                asset: asset as ASSET_TYPE,
+                strategyType: strategyType as STRATEGY_TYPE,
+                intervalAmount,
+                intervalDays: Number(intervalDaysStr),
+                acceptedSlippage,
+                totalAmount
+            };
+        }
+        
+        // For DELETE_STRATEGY - only needs asset and strategyType
+        if (action === 'DELETE_STRATEGY') {
+            const assetLine = lines.find(line => line.startsWith('Asset:'));
+            const strategyTypeLine = lines.find(line => line.startsWith('Strategy Type:'));
+    
+            const asset = assetLine?.replace('Asset:', '').trim();
+            const strategyType = strategyTypeLine?.replace('Strategy Type:', '').trim();
+    
+            if (!asset || !this.isValidAssetType(asset)) {
+                throw new Error(`Invalid asset type: ${asset}`);
+            }
+            
+            if (!strategyType || !this.isValidStrategyType(strategyType)) {
+                throw new Error(`Invalid strategy type: ${strategyType}`);
+            }
+    
+            return {
+                nonce,
+                action,
+                asset: asset as ASSET_TYPE,
+                strategyType: strategyType as STRATEGY_TYPE
+            };
         }
         
         // For other actions, return basic info

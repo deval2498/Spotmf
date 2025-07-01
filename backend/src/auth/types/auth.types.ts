@@ -19,13 +19,14 @@ export interface VerifySignatureResponse {
 
 export interface CreateActionNonceRequest {
     action: string;
-    strategyType: STRATEGY_TYPE;
-    asset: ASSET_TYPE;
-    intervalAmount: string;
-    intervalDays: string;
-    acceptedSlippage: string;
-    totalAmount: string;
     walletAddress: string;
+    strategyType?: string;
+    asset?: string;
+    intervalAmount?: string;
+    intervalDays?: string;
+    acceptedSlippage?: string;
+    totalAmount?: string;
+    strategyId?: string; // For DELETE_STRATEGY
 }
 
 export interface CreateActionNonceResponse {
@@ -47,4 +48,5 @@ export interface VerifyActionResponse {
     gasPrice: string;
     },
     actionId: string;
+    message?: string
 }
