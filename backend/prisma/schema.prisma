@@ -87,9 +87,10 @@ model UserStrategy {
   totalAmountSwapped BigInt @default(0) @map("total_amount_swapped")
 
   // Relations
-  user        User                @relation(fields: [walletAddress], references: [walletAddress], onDelete: Cascade)
-  actionNonce ActionNonce         @relation(fields: [actionNonceId], references: [id])
-  executions  StrategyExecution[]
+  user                 User                   @relation(fields: [walletAddress], references: [walletAddress], onDelete: Cascade)
+  actionNonce          ActionNonce            @relation(fields: [actionNonceId], references: [id])
+  executions           StrategyExecution[]
+  FailedTransactionLog FailedTransactionLog[]
 
   @@index([walletAddress, isActive])
   @@index([status, nextExecutionAt])
@@ -128,6 +129,45 @@ model StrategyExecution {
   @@map("strategy_executions")
 }
 
+model DmaStatus {
+  id           String     @id @default(cuid())
+  asset        ASSET_TYPE
+  currentPrice String     @map("current_price") @db.VarChar(50) // Store as string like your price models
+  dma200       String     @map("dma_200") @db.VarChar(50) // 200-day moving average
+  status       DMA_STATUS // 'ABOVE' or 'BELOW'
+  calculatedAt DateTime   @default(now()) @map("calculated_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@unique([asset, calculatedAt(sort: Desc)]) // Only one entry per asset per day
+  @@index([asset])
+  @@index([calculatedAt])
+  @@map("dma_status")
+}
+
+// Failed transaction logs for monitoring (add this model)
+model FailedTransactionLog {
+  id              String        @id @default(cuid())
+  walletAddress   String        @map("wallet_address") @db.VarChar(42)
+  strategyId      String        @map("strategy_id")
+  executionId     String?       @map("execution_id") // Link to StrategyExecution if available
+  asset           ASSET_TYPE
+  transactionHash String?       @map("transaction_hash")
+  amount          String        @db.VarChar(50) // Use string like your other amount fields
+  planType        STRATEGY_TYPE @map("plan_type")
+  errorMessage    String?       @map("error_message") @db.Text
+  failedAt        DateTime      @default(now()) @map("failed_at")
+  alertSent       Boolean       @default(false) @map("alert_sent")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  strategy UserStrategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([walletAddress])
+  @@index([failedAt])
+  @@index([alertSent])
+  @@map("failed_transaction_logs")
+}
+
 model PriceCache {
   id        String     @id @default(cuid())
   asset     ASSET_TYPE
@@ -160,6 +200,12 @@ model HistoricalPrice {
 enum STRATEGY_TYPE {
   DCA // Dollar Cost Averaging
   DCA_WITH_DMA // DCA with 200-day moving average filter
+}
+
+// Add this enum for DMA status
+enum DMA_STATUS {
+  ABOVE
+  BELOW
 }
 
 enum ASSET_TYPE {
