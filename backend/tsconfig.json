@@ -1,37 +1,26 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "rootDir": "./src",
     "outDir": "./dist",
-    "allowImportingTsExtensions": true,
-    "noEmit": false,
-    "moduleResolution": "nodenext",
-    "rewriteRelativeImportExtensions": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "nodenext",
-    
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "sourceMap": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "coverage",
-    "prisma/migrations"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

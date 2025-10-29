@@ -24,24 +24,6 @@ interface StepColorProps {
   currentStep: number;
 }
 
-interface Strategy {
-  id: string;
-  walletAddress: string;
-  txHash: string;
-  createdAt: string;
-  actionNonce: {
-    id: string;
-    walletAddress: string;
-    // ... other actionNonce fields
-  };
-}
-
-interface PaginatedStrategies {
-  data: Strategy[];
-  nextCursor: string | null;
-  hasMore: boolean;
-}
-
 const StrategyModal: React.FC<StrategyModalProps> = ({
   isOpen,
   onClose,
