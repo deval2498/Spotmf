@@ -37,6 +37,75 @@ def get_db_connection():
         password=get_secret('db-password'),
         port=5432
     )
+@app.route('/debug-secrets', methods=['GET'])
+def debug_secrets():
+    """Debug endpoint to check secret availability"""
+    secrets_status = {}
+    required_secrets = ['db-host', 'db-name', 'db-user', 'db-password']
+    
+    for secret_id in required_secrets:
+        try:
+            value = get_secret(secret_id)
+            secrets_status[secret_id] = {
+                'available': value is not None,
+                'length': len(value) if value else 0,
+                'first_char': value[0] if value else None
+            }
+        except Exception as e:
+            secrets_status[secret_id] = {
+                'available': False,
+                'error': str(e)
+            }
+    
+    return jsonify({
+        'project_id': project_id,
+        'secrets': secrets_status,
+        'environment_vars': {
+            'DB_HOST': bool(os.environ.get('DB_HOST')),
+            'DB_NAME': bool(os.environ.get('DB_NAME')),
+            'DB_USER': bool(os.environ.get('DB_USER')),
+            'DB_PASSWORD': bool(os.environ.get('DB_PASSWORD')),
+        }
+    })
+
+@app.route('/debug-permissions', methods=['GET'])
+def debug_permissions():
+    """Debug service account permissions"""
+    try:
+        import requests
+        
+        # Get service account info from metadata server
+        metadata_server = "http://metadata.google.internal/computeMetadata/v1/"
+        headers = {'Metadata-Flavor': 'Google'}
+
+        # Get service account email
+        sa_response = requests.get(
+            f"{metadata_server}instance/service-accounts/default/email",
+            headers=headers,
+            timeout=5
+        )
+        service_account = sa_response.text if sa_response.status_code == 200 else "Unknown"
+        
+        # Get access token (to verify permissions work)
+        token_response = requests.get(
+            f"{metadata_server}instance/service-accounts/default/token",
+            headers=headers,
+            timeout=5
+        )
+        
+        has_token = token_response.status_code == 200
+        
+        return jsonify({
+            'service_account': service_account,
+            'has_access_token': has_token,
+            'metadata_server_accessible': True
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'metadata_server_accessible': False
+        })
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -48,7 +117,6 @@ def execute_strategies():
     """Main endpoint to execute investment strategies"""
     try:
         logger.info("Starting Spot Buyer execution")
-        
         # Get all active strategies ready for execution
         strategies_to_execute = get_strategies_ready_for_execution()
         

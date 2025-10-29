@@ -133,6 +133,62 @@ def get_pending_transactions() -> List[Dict]:
     finally:
         conn.close()
 
+
+# Add this function after get_secret() function
+def test_database_connection():
+    """Test database connection and return detailed info"""
+    try:
+        db_host = get_secret('db-host')
+        db_name = get_secret('db-name') 
+        db_user = get_secret('db-user')
+        db_password = get_secret('db-password')
+        
+        logger.info(f"Connecting to: host={db_host}, database={db_name}, user={db_user}")
+        
+        if not all([db_host, db_name, db_user, db_password]):
+            return {
+                'success': False,
+                'error': 'Missing database credentials',
+                'secrets': {
+                    'db_host': bool(db_host),
+                    'db_name': bool(db_name), 
+                    'db_user': bool(db_user),
+                    'db_password': bool(db_password)
+                }
+            }
+        
+        conn = psycopg2.connect(
+            host=db_host,
+            database=db_name,
+            user=db_user,
+            password=db_password,
+            port=5432,
+            connect_timeout=10
+        )
+        conn.close()
+        
+        return {
+            'success': True,
+            'message': 'Database connection successful',
+            'host': db_host,
+            'database': db_name
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'host': db_host if 'db_host' in locals() else 'unknown'
+        }
+
+# Add this new endpoint for testing
+@app.route('/test-db', methods=['GET'])
+def test_db():
+    """Test database connection endpoint"""
+    result = test_database_connection()
+    status_code = 200 if result['success'] else 500
+    return jsonify(result), status_code
+
 def check_transaction_status(tx: Dict) -> str:
     """Check the blockchain status of a transaction"""
     execution_id = tx['execution_id']
