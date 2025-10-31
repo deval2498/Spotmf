@@ -135,15 +135,6 @@ DMAs do **not** need to be precomputed — they can be queried on-demand.
 
 ---
 
-## 📅 Future Extensions (not in scope now)
-
-- Real-time WebSocket tracking for faster updates.
-- BullMQ / Redis queue integration for scalable job scheduling.
-- TimescaleDB partitioning for large datasets.
-- DMA precomputation table for API performance improvements.
-
----
-
 ## ✅ Deliverables
 
 - Updated DB schema and migrations.

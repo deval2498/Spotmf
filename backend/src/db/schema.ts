@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { relations } from 'drizzle-orm'
 import {
   bigint,
@@ -43,7 +45,7 @@ export const users = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -75,7 +77,7 @@ export const actionNonces = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull(),
     nonce: varchar('nonce', { length: 64 }).notNull().unique(),
     action: varchar('action', { length: 100 }).notNull(),
@@ -109,7 +111,7 @@ export const userStrategies = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull(),
     actionNonceId: varchar('action_nonce_id', { length: 191 }).notNull().unique(),
     txHash: varchar('tx_hash_approval'),
@@ -122,7 +124,7 @@ export const userStrategies = pgTable(
     totalExecutions: integer('total_executions').notNull().default(0),
     totalAmountSwapped: bigint('total_amount_swapped', { mode: 'bigint' })
       .notNull()
-      .default(BigInt(0)),
+      .default(0),
   },
   (table) => ({
     walletActiveIdx: index('user_strategies_wallet_active_idx').on(
@@ -141,7 +143,7 @@ export const strategyExecutions = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     strategyId: varchar('strategy_id', { length: 191 }).notNull(),
     executedAt: timestamp('executed_at').notNull().defaultNow(),
     transactionHash: varchar('transaction_hash'),
@@ -174,7 +176,7 @@ export const dmaStatuses = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     asset: assetTypeEnum('asset').notNull(),
     currentPrice: varchar('current_price', { length: 50 }).notNull(),
     dma200: varchar('dma_200', { length: 50 }).notNull(),
@@ -197,7 +199,7 @@ export const failedTransactionLogs = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull(),
     strategyId: varchar('strategy_id', { length: 191 }).notNull(),
     executionId: varchar('execution_id', { length: 191 }),
@@ -222,7 +224,7 @@ export const priceCache = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     asset: assetTypeEnum('asset').notNull(),
     price: varchar('price', { length: 50 }).notNull(),
     source: varchar('source', { length: 20 }).notNull(),
@@ -243,7 +245,7 @@ export const historicalPrices = pgTable(
   {
     id: varchar('id', { length: 191 })
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .$defaultFn(() => randomUUID()),
     asset: assetTypeEnum('asset').notNull(),
     date: date('date').notNull(),
     price: varchar('price', { length: 50 }).notNull(),
@@ -258,6 +260,51 @@ export const historicalPrices = pgTable(
       table.asset,
       table.date
     ),
+  })
+)
+
+export const intradayPrices = pgTable(
+  'intraday_prices',
+  {
+    id: varchar('id', { length: 191 })
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    symbol: text('symbol').notNull(),
+    timestamp: timestamp('timestamp').notNull(),
+    price: decimal('price', { precision: 18, scale: 8 }).notNull(),
+    source: text('source'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    symbolTimestampIdx: unique('intraday_prices_symbol_timestamp_unique').on(
+      table.symbol,
+      table.timestamp
+    ),
+    timestampIdx: index('intraday_prices_timestamp_idx').on(table.timestamp),
+  })
+)
+
+export const dailyPrices = pgTable(
+  'daily_prices',
+  {
+    id: varchar('id', { length: 191 })
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    symbol: text('symbol').notNull(),
+    date: date('date').notNull(),
+    avgPrice: decimal('avg_price', { precision: 18, scale: 8 }).notNull(),
+    openPrice: decimal('open_price', { precision: 18, scale: 8 }).notNull(),
+    closePrice: decimal('close_price', { precision: 18, scale: 8 }).notNull(),
+    highPrice: decimal('high_price', { precision: 18, scale: 8 }).notNull(),
+    lowPrice: decimal('low_price', { precision: 18, scale: 8 }).notNull(),
+    dataPoints: integer('data_points').notNull(),
+    source: text('source'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    symbolDateIdx: unique('daily_prices_symbol_date_unique').on(table.symbol, table.date),
+    symbolIdx: index('daily_prices_symbol_idx').on(table.symbol),
+    dateIdx: index('daily_prices_date_idx').on(table.date),
   })
 )
 
@@ -335,3 +382,9 @@ export type NewPriceCache = typeof priceCache.$inferInsert
 
 export type HistoricalPrice = typeof historicalPrices.$inferSelect
 export type NewHistoricalPrice = typeof historicalPrices.$inferInsert
+
+export type IntradayPrice = typeof intradayPrices.$inferSelect
+export type NewIntradayPrice = typeof intradayPrices.$inferInsert
+
+export type DailyPrice = typeof dailyPrices.$inferSelect
+export type NewDailyPrice = typeof dailyPrices.$inferInsert

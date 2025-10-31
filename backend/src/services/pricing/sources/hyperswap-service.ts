@@ -1,10 +1,9 @@
-import { and, eq } from 'drizzle-orm'
 import { ethers } from 'ethers'
 
 import type { Database } from '@/db/client.ts'
-import { historicalPrices, priceCache } from '@/db/schema.ts'
-import HyperswapPool from '@/market-data/abis/HyperswapV3Pool.json' with { type: 'json' }
-import type { PoolConfig } from '@/market-data/types/market-data.types.ts'
+import { logger } from '@/lib/logger.ts'
+import HyperswapPool from '@/services/pricing/abis/HyperswapV3Pool.json' with { type: 'json' }
+import type { PoolConfig } from '@/services/pricing/types.ts'
 
 export class HyperswapPriceService {
   private provider: ethers.JsonRpcProvider
@@ -35,10 +34,10 @@ export class HyperswapPriceService {
         poolConfig.token1Decimals,
         poolConfig.pricePerToken
       )
-      console.log(`💰 ${asset} price from pool: ${price.toFixed(6)}`)
+      logger.info(`${asset} price from Hyperswap pool: ${price.toFixed(6)}`)
       return price
     } catch (error) {
-      console.error(`Failed to fetch price for ${asset} from pool:`, error)
+      logger.error(`Failed to fetch price for ${asset} from pool:`, error)
       throw error
     }
   }
@@ -49,36 +48,12 @@ export class HyperswapPriceService {
     for (const poolConfig of this.poolConfigs) {
       try {
         prices[poolConfig.asset] = await this.getCurrentPoolPrices(poolConfig.asset)
-      } catch {
-        console.log('Failed to fetch price of asset,', poolConfig.asset)
+      } catch (error) {
+        logger.error(`Failed to fetch price of asset ${poolConfig.asset}:`, error)
       }
     }
 
     return prices
-  }
-
-  async saveCurrentPrices(): Promise<void> {
-    console.log('Fetching and saving prices from hyperswap')
-    try {
-      const prices = await this.getAllCurrentPoolPrices()
-      const timestamp = new Date()
-      for (const [asset, price] of Object.entries(prices)) {
-        const poolConfig = this.poolConfigs.find((p) => asset === p.asset)
-        if (!poolConfig) {
-          throw Error('Pool config not found')
-        }
-        await this.db.insert(priceCache).values({
-          asset: asset as any,
-          timestamp,
-          price: price.toString(),
-          source: 'DEX',
-        })
-        await this.saveAsHistoricalPrice(asset, price, timestamp)
-      }
-    } catch (error) {
-      console.error('Failed to save current prices:', error)
-      throw error
-    }
   }
 
   async healthCheck(): Promise<{
@@ -93,8 +68,9 @@ export class HyperswapPriceService {
       try {
         await this.getCurrentPoolPrices(poolConfig.asset)
         poolsChecked++
-      } catch (error: any) {
-        errors.push(`${poolConfig.asset}: ${error.message}`)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        errors.push(`${poolConfig.asset}: ${errorMessage}`)
       }
     }
 
@@ -119,7 +95,7 @@ export class HyperswapPriceService {
         poolContract.fee(),
       ])
 
-      console.log(`Pool ${poolConfig.asset}:`, {
+      logger.info(`Pool ${poolConfig.asset} config:`, {
         address: poolConfig.address,
         token0: token0.toLowerCase(),
         token1: token1.toLowerCase(),
@@ -132,60 +108,15 @@ export class HyperswapPriceService {
       const token1Match = token1.toLowerCase() === poolConfig.token1.toLowerCase()
 
       if (!token0Match || !token1Match) {
-        console.error(`❌ Pool configuration mismatch for ${poolConfig.asset}`)
+        logger.error(`Pool configuration mismatch for ${poolConfig.asset}`)
         return false
       }
 
-      console.log(`✅ Pool configuration valid for ${poolConfig.asset}`)
+      logger.info(`Pool configuration valid for ${poolConfig.asset}`)
       return true
     } catch (error) {
-      console.error(`❌ Failed to validate pool config for ${poolConfig.asset}:`, error)
+      logger.error(`Failed to validate pool config for ${poolConfig.asset}:`, error)
       return false
-    }
-  }
-
-  private async saveAsHistoricalPrice(
-    asset: string,
-    price: number,
-    timestamp: Date
-  ): Promise<void> {
-    const dateOnly = new Date(
-      timestamp.getFullYear(),
-      timestamp.getMonth(),
-      timestamp.getDate()
-    )
-
-    // Check if record exists
-    const existing = await this.db.query.historicalPrices.findFirst({
-      where: and(
-        eq(historicalPrices.asset, asset as any),
-        eq(historicalPrices.date, dateOnly.toISOString().split('T')[0])
-      ),
-    })
-
-    if (existing) {
-      // Update existing record
-      await this.db
-        .update(historicalPrices)
-        .set({
-          price: price.toString(),
-          source: 'DEX',
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(historicalPrices.asset, asset as any),
-            eq(historicalPrices.date, dateOnly.toISOString().split('T')[0])
-          )
-        )
-    } else {
-      // Insert new record
-      await this.db.insert(historicalPrices).values({
-        asset: asset as any,
-        date: dateOnly.toISOString().split('T')[0],
-        price: price.toString(),
-        source: 'DEX',
-      })
     }
   }
 
@@ -197,7 +128,9 @@ export class HyperswapPriceService {
   ) {
     try {
       // Constants
-      console.log('Trying to convert,', sqrtPriceX96, token0Decimals)
+      // logger.info(
+      //   `Converting sqrtPriceX96: ${sqrtPriceX96}, token0Decimals: ${token0Decimals}`
+      // )
       const Q96 = 2n ** 96n
       const PRECISION = 10n ** 18n
       // Convert sqrtPriceX96 to price
@@ -229,7 +162,7 @@ export class HyperswapPriceService {
       const result = Number(wholePart) + Number(fractionalPart) / Number(divisor)
       return result
     } catch (error) {
-      console.error('Error converting sqrtPriceX96 to price:', error)
+      logger.error('Error converting sqrtPriceX96 to price:', error)
       throw new Error('Failed to convert pool price')
     }
   }

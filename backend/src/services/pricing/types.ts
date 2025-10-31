@@ -1,3 +1,7 @@
+/**
+ * Type definitions for pricing services
+ */
+
 export interface PoolConfig {
   address: string
   token0: string
