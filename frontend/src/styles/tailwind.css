@@ -1,0 +1,15 @@
+@import "./themes.css";
+@import "tailwindcss";
+@import "./components.css";
+@import "./utilities.css";
+@import "./animations.css";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
