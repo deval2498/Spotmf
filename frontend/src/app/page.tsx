@@ -1,25 +1,14 @@
-"use client";
-import { Navbar } from "@/components/ui/Navbar";
-import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
-import { useState } from "react";
-import { Hero, HeroAdvanced } from "@/components/ui/Hero";
-export default function Home() {
-  const [showNavbar, setShowNavbar] = useState(false);
-
-  const handleLogoAnimationComplete = () => {
-    // Start navbar animation after logo reaches its position
-    setShowNavbar(true);
-  };
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-black">
-      {/* Animated Logo - starts immediately */}
-      <AnimatedLogo onAnimationComplete={handleLogoAnimationComplete} />
-
-      {/* Navbar - shows after logo animation completes */}
-      <Navbar showNavbar={showNavbar} />
-
-      {/* Rest of your content */}
-      <Hero showHero={showNavbar} />
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
+        <h1 className="text-4xl font-bold text-center mb-4">
+          Welcome to SpotMF
+        </h1>
+        <p className="text-center text-lg">
+          Clean slate. Ready to build with CLAUDE.md architecture.
+        </p>
+      </div>
+    </main>
   );
 }
