@@ -64,6 +64,7 @@ export const authNonces = pgTable(
   {
     walletAddress: varchar('wallet_address', { length: 42 }).primaryKey().notNull(),
     nonce: varchar('nonce', { length: 64 }).notNull(),
+    chainId: integer('chain_id').notNull().default(1),
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
@@ -124,7 +125,7 @@ export const userStrategies = pgTable(
     totalExecutions: integer('total_executions').notNull().default(0),
     totalAmountSwapped: bigint('total_amount_swapped', { mode: 'bigint' })
       .notNull()
-      .default(0),
+      .default(BigInt(0)),
   },
   (table) => ({
     walletActiveIdx: index('user_strategies_wallet_active_idx').on(

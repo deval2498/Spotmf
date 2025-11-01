@@ -57,7 +57,7 @@ export class CoinGeckoPriceService {
         throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`)
       }
 
-      const data: CoinGeckoSimplePriceResponse = await response.json()
+      const data = (await response.json()) as CoinGeckoSimplePriceResponse
 
       if (!data[coinGeckoId] || typeof data[coinGeckoId].usd !== 'number') {
         throw new Error(`No price data returned for ${symbol} (${coinGeckoId})`)
@@ -110,7 +110,7 @@ export class CoinGeckoPriceService {
         throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`)
       }
 
-      const data: CoinGeckoSimplePriceResponse = await response.json()
+      const data = (await response.json()) as CoinGeckoSimplePriceResponse
 
       // Map CoinGecko IDs back to internal symbols
       const prices: Partial<Record<InternalSymbol, number>> = {}

@@ -1,4 +1,4 @@
-import { and, lt } from 'drizzle-orm'
+import { and, gt, lt } from 'drizzle-orm'
 
 import type { Database } from '@/db/client.ts'
 import { intradayPrices, type NewIntradayPrice } from '@/db/schema.ts'
@@ -104,7 +104,7 @@ export async function getIntradayPrices(
     const prices = await db.query.intradayPrices.findMany({
       where: and(
         lt(intradayPrices.timestamp, endDate),
-        lt(startDate, intradayPrices.timestamp)
+        gt(intradayPrices.timestamp, startDate)
       ),
       orderBy: (intradayPrices, { asc }) => [asc(intradayPrices.timestamp)],
     })

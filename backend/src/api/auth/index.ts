@@ -6,23 +6,24 @@ import { type AuthContext, authMiddleware } from '@/middleware/auth.ts'
 import * as authService from '@/services/auth-service.ts'
 
 import {
-  challengeSchema,
   createActionSchema,
+  nonceSchema,
   verifyActionSchema,
   verifySchema,
 } from './validators.ts'
 
 export const authRoutes = new Hono<AuthContext>()
 
-authRoutes.post('/challenge', zValidator('json', challengeSchema), async (c) => {
-  const { walletAddress } = c.req.valid('json')
-  const result = await authService.generateChallenge(walletAddress)
+// SIWE-compliant endpoints (EIP-4361)
+authRoutes.post('/nonce', zValidator('json', nonceSchema), async (c) => {
+  const { address, chainId } = c.req.valid('json')
+  const result = await authService.generateSiweNonce(address, chainId)
   return success(c, result)
 })
 
 authRoutes.post('/verify', zValidator('json', verifySchema), async (c) => {
-  const { walletAddress, signature } = c.req.valid('json')
-  const result = await authService.verifyAndLogin(walletAddress, signature)
+  const { message, signature } = c.req.valid('json')
+  const result = await authService.verifySiweAndLogin(message, signature)
   return success(c, result)
 })
 

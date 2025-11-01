@@ -1,9 +1,10 @@
 import crypto from 'crypto'
 import type { SignOptions } from 'jsonwebtoken'
 import jwt from 'jsonwebtoken'
+import { SiweMessage } from 'siwe'
 import { recoverMessageAddress } from 'viem'
 
-import { env } from '@/lib/env.ts'
+import { env, getAllowedChainIds } from '@/lib/env.ts'
 
 const VALID_STRATEGY_TYPES = ['DCA', 'DCA_WITH_DMA'] as const
 const VALID_ASSET_TYPES = ['BTC', 'ETH', 'HYPE'] as const
@@ -19,8 +20,49 @@ export function generateActionNonce(): string {
   return crypto.randomBytes(32).toString('hex')
 }
 
-export function createAuthMessage(nonce: string): string {
-  return `Sign this message to authenticate ${nonce}`
+export async function verifySiweSignature(
+  message: string,
+  signature: string
+): Promise<{
+  success: boolean
+  address?: string
+  chainId?: number
+  nonce?: string
+  error?: string
+}> {
+  try {
+    const siweMessage = new SiweMessage(message)
+
+    const result = await siweMessage.verify({
+      signature,
+      domain: env.APP_DOMAIN,
+    })
+
+    if (!result.success) {
+      return { success: false, error: 'Invalid signature' }
+    }
+
+    const allowedChainIds = getAllowedChainIds()
+    if (!allowedChainIds.includes(siweMessage.chainId)) {
+      return { success: false, error: 'Unsupported chain ID' }
+    }
+
+    if (siweMessage.domain !== env.APP_DOMAIN) {
+      return { success: false, error: 'Domain mismatch' }
+    }
+
+    return {
+      success: true,
+      address: siweMessage.address,
+      chainId: siweMessage.chainId,
+      nonce: siweMessage.nonce,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Verification failed',
+    }
+  }
 }
 
 export function getWalletAddressFromSignature(

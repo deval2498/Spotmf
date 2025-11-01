@@ -1,4 +1,4 @@
-import cron from 'node-cron'
+import cron, { type ScheduledTask } from 'node-cron'
 
 import { db } from '@/db/client.ts'
 import { logger } from '@/lib/logger.ts'
@@ -84,7 +84,7 @@ export function startIntradayPriceFetchJob(
   hyperswapService: HyperswapPriceService,
   coinGeckoService: CoinGeckoPriceService,
   intervalMinutes: number = 5
-): cron.ScheduledTask {
+): ScheduledTask {
   logger.info(`Starting intraday price fetch job (every ${intervalMinutes} minutes)`)
 
   // Fetch immediately on start
@@ -103,7 +103,7 @@ export function startIntradayPriceFetchJob(
 /**
  * Stops the intraday price fetch job
  */
-export function stopIntradayPriceFetchJob(task: cron.ScheduledTask): void {
+export function stopIntradayPriceFetchJob(task: ScheduledTask): void {
   if (task) {
     task.stop()
     logger.info('Stopped intraday price fetch job')

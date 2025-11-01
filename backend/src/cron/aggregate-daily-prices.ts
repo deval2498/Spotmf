@@ -1,4 +1,4 @@
-import cron from 'node-cron'
+import cron, { type ScheduledTask } from 'node-cron'
 
 import { db } from '@/db/client.ts'
 import { logger } from '@/lib/logger.ts'
@@ -33,7 +33,7 @@ async function aggregatePreviousDayPrices(symbols: string[]): Promise<void> {
 /**
  * Starts the daily aggregation cron job (runs at 00:05 UTC)
  */
-export function startDailyAggregationJob(symbols: string[]): cron.ScheduledTask {
+export function startDailyAggregationJob(symbols: string[]): ScheduledTask {
   logger.info('Starting daily price aggregation job (00:05 UTC daily)')
 
   // Schedule job to run at 00:05 UTC every day
@@ -55,7 +55,7 @@ export function startDailyAggregationJob(symbols: string[]): cron.ScheduledTask 
 /**
  * Stops the daily aggregation job
  */
-export function stopDailyAggregationJob(task: cron.ScheduledTask): void {
+export function stopDailyAggregationJob(task: ScheduledTask): void {
   if (task) {
     task.stop()
     logger.info('Stopped daily aggregation job')

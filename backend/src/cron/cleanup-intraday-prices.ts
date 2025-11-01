@@ -1,4 +1,4 @@
-import cron from 'node-cron'
+import cron, { type ScheduledTask } from 'node-cron'
 
 import { db } from '@/db/client.ts'
 import { logger } from '@/lib/logger.ts'
@@ -22,7 +22,7 @@ async function cleanupOldPrices(): Promise<void> {
 /**
  * Starts the cleanup cron job (runs at 00:30 UTC daily, after aggregation)
  */
-export function startCleanupJob(): cron.ScheduledTask {
+export function startCleanupJob(): ScheduledTask {
   logger.info('Starting intraday price cleanup job (00:30 UTC daily)')
 
   // Schedule job to run at 00:30 UTC every day (after aggregation at 00:05)
@@ -44,7 +44,7 @@ export function startCleanupJob(): cron.ScheduledTask {
 /**
  * Stops the cleanup job
  */
-export function stopCleanupJob(task: cron.ScheduledTask): void {
+export function stopCleanupJob(task: ScheduledTask): void {
   if (task) {
     task.stop()
     logger.info('Stopped cleanup job')

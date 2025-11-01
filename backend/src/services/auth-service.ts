@@ -1,18 +1,20 @@
 import { and, eq, gt } from 'drizzle-orm'
-import { ethers } from 'ethers'
+import { ethers, getAddress } from 'ethers'
+import { SiweMessage } from 'siwe'
 
 import { db } from '@/db/client.ts'
 import { actionNonces, authNonces, users } from '@/db/schema.ts'
+import { env } from '@/lib/env.ts'
 import { AuthException } from '@/lib/errors.ts'
 import {
   createActionMessage,
-  createAuthMessage,
   createDeleteActionMessage,
   generateActionNonce,
   generateAuthNonce,
   generateJWT,
   getWalletAddressFromSignature,
   parseActionMessage,
+  verifySiweSignature,
 } from '@/services/crypto-service.ts'
 
 const strategyContractAddresses: Record<string, string> = {
@@ -23,8 +25,10 @@ function getUnprefixedHex(signature: string): string {
   return signature.startsWith('0x') ? signature.slice(2) : signature
 }
 
-export async function generateChallenge(walletAddress: string) {
+export async function generateSiweNonce(walletAddress: string, chainId: number) {
+  // Normalize to lowercase for DB storage, but use checksummed for SIWE
   const normalizedAddress = walletAddress.toLowerCase()
+  const checksummedAddress = getAddress(walletAddress)
 
   const existingNonce = await db.query.authNonces.findFirst({
     where: and(
@@ -34,66 +38,90 @@ export async function generateChallenge(walletAddress: string) {
   })
 
   if (existingNonce) {
+    const siweMessage = new SiweMessage({
+      domain: env.APP_DOMAIN,
+      address: checksummedAddress,
+      uri: `${env.APP_URL}/login`,
+      version: '1',
+      chainId,
+      nonce: existingNonce.nonce,
+      issuedAt: new Date().toISOString(),
+    })
+
     return {
-      message: createAuthMessage(existingNonce.nonce),
+      nonce: existingNonce.nonce,
+      message: siweMessage.prepareMessage(),
     }
   }
 
   const nonce = generateAuthNonce()
-  const message = createAuthMessage(nonce)
+  const siweMessage = new SiweMessage({
+    domain: env.APP_DOMAIN,
+    address: checksummedAddress,
+    uri: `${env.APP_URL}/login`,
+    version: '1',
+    chainId,
+    nonce,
+    issuedAt: new Date().toISOString(),
+  })
+
+  const message = siweMessage.prepareMessage()
 
   await db
     .insert(authNonces)
     .values({
       walletAddress: normalizedAddress,
       nonce,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      chainId,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     })
     .onConflictDoUpdate({
       target: authNonces.walletAddress,
       set: {
         nonce,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        chainId,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       },
     })
 
-  return { message }
+  return { nonce, message }
 }
 
-export async function verifyAndLogin(walletAddress: string, signature: string) {
-  const normalizedWalletAddress = walletAddress.toLowerCase()
+export async function verifySiweAndLogin(message: string, signature: string) {
+  const verificationResult = await verifySiweSignature(message, signature)
+
+  if (!verificationResult.success || !verificationResult.address) {
+    throw new AuthException(verificationResult.error || 'Signature verification failed')
+  }
+
+  // Get checksummed address from verification, normalize for DB
+  const checksummedAddress = getAddress(verificationResult.address)
+  const normalizedAddress = verificationResult.address.toLowerCase()
+  const nonce = verificationResult.nonce
 
   const nonceData = await db.query.authNonces.findFirst({
     where: and(
-      eq(authNonces.walletAddress, normalizedWalletAddress),
+      eq(authNonces.walletAddress, normalizedAddress),
+      eq(authNonces.nonce, nonce!),
       gt(authNonces.expiresAt, new Date())
     ),
   })
 
   if (!nonceData) {
-    throw new AuthException('No valid nonce found')
+    throw new AuthException('Nonce expired or not found')
   }
 
-  const message = createAuthMessage(nonceData.nonce)
-  const unprefixedHex = getUnprefixedHex(signature)
-  const recoveredAddress = await getWalletAddressFromSignature(
-    message,
-    `0x${unprefixedHex}`
-  )
-
-  if (recoveredAddress.toLowerCase() !== nonceData.walletAddress) {
-    throw new AuthException('Invalid address, use the correct wallet to sign from')
+  if (nonceData.walletAddress.toLowerCase() !== normalizedAddress) {
+    throw new AuthException('Address mismatch')
   }
 
   await db.transaction(async (tx) => {
-    await tx
-      .delete(authNonces)
-      .where(eq(authNonces.walletAddress, normalizedWalletAddress))
+    await tx.delete(authNonces).where(eq(authNonces.walletAddress, normalizedAddress))
 
     await tx
       .insert(users)
       .values({
-        walletAddress: normalizedWalletAddress,
+        walletAddress: normalizedAddress,
         isActive: true,
       })
       .onConflictDoUpdate({
@@ -104,10 +132,12 @@ export async function verifyAndLogin(walletAddress: string, signature: string) {
       })
   })
 
-  const token = generateJWT({ walletAddress: normalizedWalletAddress }, '30d')
+  const token = generateJWT({ walletAddress: normalizedAddress }, '30d')
 
   return {
-    jwt: token,
+    success: true,
+    address: checksummedAddress,
+    sessionToken: token,
   }
 }
 

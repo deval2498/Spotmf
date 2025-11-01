@@ -44,7 +44,7 @@ async function fetchCoinGeckoHistoricalData(
       throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as CoinGeckoMarketChartResponse
     return data
   } catch (error) {
     logger.error(`Failed to fetch data from CoinGecko for ${coinId}:`, error)
