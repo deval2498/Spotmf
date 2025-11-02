@@ -1,14 +1,11 @@
-export default function HomePage() {
+export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold text-center mb-4">
-          Welcome to SpotMF
-        </h1>
-        <p className="text-center text-lg">
-          Clean slate. Ready to build with CLAUDE.md architecture.
-        </p>
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-primary text-primary-foreground">
+      <h1 className="text-4xl font-bold">✅ Tailwind is Working!</h1>
+      <p className="text-lg mt-4 text-muted-foreground">
+        If you see colored background + styled text, Tailwind is active.
+      </p>
+      <button className="btn-primary mt-6">Click Me</button>
     </main>
   );
 }

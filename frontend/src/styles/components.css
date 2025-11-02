@@ -1,21 +1,128 @@
 @layer components {
+  /* Layout */
   .container {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
+  .section {
+    @apply py-12 sm:py-16 md:py-20;
+  }
+
+  /* Cards */
   .card {
-    @apply bg-card text-card-foreground rounded-lg shadow-sm border border-border p-4;
+    background-color: var(--color-card);
+    color: var(--color-card-foreground);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    padding: 1rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .card-interactive {
+    background-color: var(--color-card);
+    color: var(--color-card-foreground);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    padding: 1rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    @apply transition-colors cursor-pointer;
+    &:hover {
+      border-color: var(--color-muted-foreground);
+      opacity: 0.8;
+    }
+  }
+
+  /* Buttons - Linear style */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium transition-all;
+    @apply focus-visible:outline-none focus-visible:ring-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    border-radius: var(--radius-md);
+    &:focus-visible {
+      box-shadow: 0 0 0 2px var(--color-ring);
+    }
   }
 
   .btn-primary {
-    @apply bg-primary text-primary-foreground font-medium py-2 px-4 rounded-md hover:bg-primary/90 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 font-medium transition-all;
+    @apply focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50;
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+    &:hover {
+      filter: brightness(0.95);
+    }
+    &:active {
+      filter: brightness(0.9);
+    }
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground font-medium py-2 px-4 rounded-md hover:bg-secondary/90 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 font-medium transition-all;
+    @apply focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50;
+    border-radius: var(--radius-md);
+    background-color: var(--color-secondary);
+    color: var(--color-secondary-foreground);
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
-  .section {
-    @apply py-12 sm:py-16 md:py-20;
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 font-medium transition-all;
+    @apply focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50;
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--color-foreground);
+    &:hover {
+      background-color: var(--color-muted);
+    }
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-md {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* Input fields */
+  .input {
+    @apply w-full px-3 py-2 text-sm;
+    @apply focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-input);
+    background-color: var(--color-background);
+    &::placeholder {
+      color: var(--color-muted-foreground);
+    }
+    &:focus-visible {
+      box-shadow: 0 0 0 2px var(--color-ring);
+    }
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    border: 1px solid transparent;
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+
+  .badge-secondary {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: var(--color-secondary);
+    color: var(--color-secondary-foreground);
+    border: 1px solid transparent;
   }
 }
