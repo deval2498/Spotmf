@@ -54,7 +54,7 @@ export function Navbar() {
 
           {/* CTA Button */}
           <Button size="default" className="transition-all">
-            Connect Wallet
+            Launch app
           </Button>
         </div>
       </div>

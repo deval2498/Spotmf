@@ -10,6 +10,7 @@ interface FeatureCardProps {
   description: string;
   features?: string[];
   className?: string;
+  iconColor?: string;
 }
 
 export function FeatureCard({
@@ -18,6 +19,7 @@ export function FeatureCard({
   description,
   features,
   className,
+  iconColor = "text-foreground",
 }: FeatureCardProps) {
   return (
     <Card
@@ -28,7 +30,10 @@ export function FeatureCard({
       )}
     >
       <CardHeader>
-        <div className="w-12 h-12 rounded-xl bg-foreground/5 border border-border/50 flex items-center justify-center mb-4 transition-all group-hover:bg-foreground/8 group-hover:border-border">
+        <div className={cn(
+          "w-12 h-12 rounded-xl bg-foreground/5 border border-border/50 flex items-center justify-center mb-4 transition-all group-hover:bg-foreground/8 group-hover:border-current",
+          iconColor
+        )}>
           {icon}
         </div>
         <CardTitle className="text-xl">{title}</CardTitle>

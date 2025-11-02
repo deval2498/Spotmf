@@ -60,7 +60,7 @@ export default function LandingPage() {
                   size="lg"
                   className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
                 >
-                  Connect Wallet
+                  Launch app
                 </Button>
               </motion.div>
 
@@ -108,9 +108,10 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-2 gap-8 md:gap-12">
               <AnimatedSection delay={0.1}>
                 <FeatureCard
+                  iconColor="text-[#5E6AD2]"
                   icon={
                     <svg
-                      className="w-6 h-6 text-foreground"
+                      className="w-6 h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -135,9 +136,10 @@ export default function LandingPage() {
 
               <AnimatedSection delay={0.2}>
                 <FeatureCard
+                  iconColor="text-[#22C55E]"
                   icon={
                     <svg
-                      className="w-6 h-6 text-foreground"
+                      className="w-6 h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -193,9 +195,10 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8 md:gap-12 mt-20">
               <AnimatedSection delay={0.15}>
                 <FeatureItem
+                  iconColor="text-[#5E6AD2]"
                   icon={
                     <svg
-                      className="w-5 h-5 text-foreground"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -215,9 +218,10 @@ export default function LandingPage() {
 
               <AnimatedSection delay={0.25}>
                 <FeatureItem
+                  iconColor="text-[#22C55E]"
                   icon={
                     <svg
-                      className="w-5 h-5 text-foreground"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -237,9 +241,10 @@ export default function LandingPage() {
 
               <AnimatedSection delay={0.35}>
                 <FeatureItem
+                  iconColor="text-[#F59E0B]"
                   icon={
                     <svg
-                      className="w-5 h-5 text-foreground"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -283,7 +288,7 @@ export default function LandingPage() {
                   size="lg"
                   className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
                 >
-                  Connect Wallet
+                  Launch app
                 </Button>
               </div>
             </div>
