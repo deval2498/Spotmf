@@ -50,6 +50,45 @@ Move with component when promoted
 
 ---
 
+## Atomic UI Principles
+
+**Build from small to large, compose over complexity.**
+
+Follow atomic design methodology for component architecture:
+
+### Component Hierarchy
+
+```
+Atoms:       Basic building blocks (Button, Input, Label, Icon)
+             → src/components/ui/ (ShadCN primitives)
+
+Molecules:   Simple combinations of atoms (SearchBar, FormField, Card)
+             → src/components/shared/ or page-scoped
+
+Organisms:   Complex, reusable sections (Navbar, Sidebar, ProductCard)
+             → src/components/layout/ or src/components/shared/
+
+Templates:   Page layouts with composition slots
+             → src/app/{page}/layout.tsx or src/components/layout/
+
+Pages:       Specific instances with real content
+             → src/app/{page}/page.tsx
+```
+
+**Rules:**
+- Atoms should be stateless and highly reusable
+- Molecules combine 2-5 atoms with minimal logic
+- Organisms can manage their own state but remain independent
+- Keep business logic in pages/containers, not in atoms/molecules
+- Each level should only reference components from lower levels
+
+**Examples:**
+- ✅ Atom: `<Button>` → Molecule: `<SearchBar>` → Organism: `<Navbar>`
+- ✅ Molecule depends on atoms, organism depends on molecules
+- ❌ Atom depending on molecule or organism
+
+---
+
 ## State Management Boundaries
 
 | Use Case | Solution | Location |
@@ -91,6 +130,8 @@ Hooks pattern:   use[Feature][Verb]
 - ❌ Use relative imports for shared code
 - ❌ Put server state in Zustand stores
 - ❌ Create global utilities for single-page use
+- ❌ Make atoms/molecules depend on organisms or pages
+- ❌ Put business logic in low-level atomic components
 
 ---
 

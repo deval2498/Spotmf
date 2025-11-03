@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -56,12 +57,14 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
               >
-                <Button
-                  size="lg"
-                  className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
-                >
-                  Launch app
-                </Button>
+                <Link href="/dashboard">
+                  <Button
+                    size="lg"
+                    className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
+                  >
+                    Launch app
+                  </Button>
+                </Link>
               </motion.div>
 
               {/* Strategy Badges Card */}
@@ -186,7 +189,7 @@ export default function LandingPage() {
             <AnimatedSection delay={0.1}>
               <div className="mt-12 pt-12 border-t border-border/40">
                 <blockquote className="text-xl md:text-2xl font-medium text-foreground/90 italic text-center max-w-3xl mx-auto">
-                  "Think of it as your personalized crypto autopilot."
+                  &ldquo;Think of it as your personalized crypto autopilot.&rdquo;
                 </blockquote>
               </div>
             </AnimatedSection>
@@ -284,12 +287,14 @@ export default function LandingPage() {
                 Ready to automate your strategy?
               </h2>
               <div>
-                <Button
-                  size="lg"
-                  className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
-                >
-                  Launch app
-                </Button>
+                <Link href="/dashboard">
+                  <Button
+                    size="lg"
+                    className="px-6 py-4 text-base rounded-full shadow-sm hover:shadow-md transition-all"
+                  >
+                    Launch app
+                  </Button>
+                </Link>
               </div>
             </div>
           </AnimatedSection>
