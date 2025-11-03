@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import { WagmiConfigProvider } from "@/providers/wagmi-provider";
 
 export default function RootLayout({
   children,
@@ -8,7 +9,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased bg-background text-foreground">
-        {children}
+        <WagmiConfigProvider>
+          {children}
+        </WagmiConfigProvider>
       </body>
     </html>
   );
