@@ -40,7 +40,8 @@ const sidebarItems: SidebarItem[] = [
     ),
   },
   {
-    title: "Strategy",
+    title: "Create Strategy",
+    href: "/dashboard/strategy",
     icon: (
       <svg
         className="w-5 h-5"
@@ -56,10 +57,6 @@ const sidebarItems: SidebarItem[] = [
         />
       </svg>
     ),
-    children: [
-      { title: "SIP Strategy", href: "/dashboard/sip" },
-      { title: "DMA Strategy", href: "/dashboard/dma" },
-    ],
   },
   {
     title: "Portfolio",
@@ -114,7 +111,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([
-    "Strategy",
     "Portfolio",
   ]);
 
@@ -133,7 +129,7 @@ export function Sidebar() {
       setExpandedSections([]);
     } else {
       // Expand default sections when sidebar is expanded
-      setExpandedSections(["Strategy", "Portfolio"]);
+      setExpandedSections(["Portfolio"]);
     }
   };
 
